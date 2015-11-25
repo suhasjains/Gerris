@@ -1,0 +1,332 @@
+2 patches for repository /home/jmlopez/investigacion/stable/gerris-stable:
+
+Tue Dec 10 13:34:09 CET 2013  Jose M. Lopez-Herrera Sanchez <jose.lopez.herrera.s@gmail.com>
+  * advection takes into account solid dirichlet BC
+
+Tue Dec 17 16:47:51 CET 2013  Jose M. Lopez-Herrera Sanchez <jose.lopez.herrera.s@gmail.com>
+  * permeable solids works with VOF and VOFConcentration
+
+New patches:
+
+[advection takes into account solid dirichlet BC
+Jose M. Lopez-Herrera Sanchez <jose.lopez.herrera.s@gmail.com>**20131210123409
+ Ignore-this: 3ab08ea2ef8ce0019d5ac8d0e68b4514
+] hunk ./src/timestep.c 356
+                             (FttCellTraverseFunc) cell_volume_source, &par);
+ }
+ 
++typedef struct {
++  GfsDomain * domain;
++  GfsVariable * v;
++  GfsVariable * fv;
++  gdouble dt;
++} InfilParams;
++
++static void infiltration_velocity (FttCell * cell, InfilParams * infil)
++{
++  g_return_if_fail (GFS_IS_MIXED (cell));
++
++  GfsSolidVector * s = GFS_STATE (cell)->solid;
++  FttVector m = {1.,1.,1.};
++  gfs_domain_solid_metric (infil->domain, cell, &m);
++  s->v.x = 0.;
++  FttComponent c;
++  for (c = 0; c < FTT_DIMENSION; c++) {
++    GfsVariable * u = gfs_domain_velocity (infil->domain)[c];
++    if(u->surface_bc) {
++      (* GFS_SURFACE_GENERIC_BC_CLASS (GTS_OBJECT (u->surface_bc)->klass)->bc)
++	(cell, u->surface_bc);
++      if (((cell)->flags & GFS_FLAG_DIRICHLET) != 0)
++	s->v.x -= s->fv*(&m.x)[c]*(s->s[2*c+1]-s->s[2*c]);
++    }
++  }
++}
++
++static void solid_infiltration_div (FttCell * cell, InfilParams * infil)
++{
++  g_return_if_fail (GFS_IS_MIXED (cell));
++
++  GfsSolidVector * s = GFS_STATE (cell)->solid;
++  GFS_VALUE (cell, infil->fv) -= s->v.x*ftt_cell_size (cell);
++}
++
++static void solid_infiltration_flux (FttCell * cell, InfilParams * infil)
++{
++  g_return_if_fail (GFS_IS_MIXED (cell));
++
++  GfsSolidVector * s = GFS_STATE (cell)->solid;
++  (* GFS_SURFACE_GENERIC_BC_CLASS (GTS_OBJECT (infil->v->surface_bc)->klass)->bc)
++    (cell, infil->v->surface_bc);
++  if (((cell)->flags & GFS_FLAG_DIRICHLET) != 0)
++    GFS_VALUE (cell, infil->fv) += s->fv*s->v.x*infil->dt/ftt_cell_size (cell);
++}
++
++static void solid_infiltration (GfsDomain * domain,
++				GfsVariable * v,
++				GfsVariable * fv,
++				gdouble dt)
++{
++  GfsVariable ** u = gfs_domain_velocity (domain);
++#if FTT_2D /* 2D */
++  if(u[0]->surface_bc || u[1]->surface_bc) {
++#else /* 3D */
++  if(u[0]->surface_bc || u[1]->surface_bc || u[2]->surface_bc) {
++#endif
++    InfilParams infil = {domain, v, fv, dt};
++    gfs_domain_traverse_mixed (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS,
++			       (FttCellTraverseFunc) infiltration_velocity, &infil);
++    if (v == NULL)
++      gfs_domain_traverse_mixed (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS,
++				 (FttCellTraverseFunc) solid_infiltration_div, &infil);
++    else if (v->surface_bc)
++      gfs_domain_traverse_mixed (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS,
++				 (FttCellTraverseFunc) solid_infiltration_flux, &infil);
++  }
++}
++
+ static void mac_projection (GfsDomain * domain,
+ 			    GfsMultilevelParams * par,
+ 			    gdouble dt,
+hunk ./src/timestep.c 464
+   gfs_domain_cell_traverse (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+ 			    (FttCellTraverseFunc) gfs_normal_divergence, div);
+ 
++  /* Add infiltration from solids */
++  solid_infiltration (domain, NULL, div, 1.0);
++
+   /* Divergence hook */
+   if (divergence_hook)
+     (* divergence_hook) (domain, dt, div);
+hunk ./src/timestep.c 954
+     gfs_domain_face_traverse (domain, FTT_XYZ,
+ 			      FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+ 			      (FttFaceTraverseFunc) par->flux, par);
++    solid_infiltration (domain, v, par->fv, par->dt);
+     gfs_remove_sinking_velocity (domain, par);
+     par->v = sv;
+     gfs_domain_traverse_merged (domain, par->update, par);
+[permeable solids works with VOF and VOFConcentration
+Jose M. Lopez-Herrera Sanchez <jose.lopez.herrera.s@gmail.com>**20131217154751
+ Ignore-this: 9adda2f82b9f85d4113f0cc20c5babe
+] hunk ./src/timestep.c 356
+                             (FttCellTraverseFunc) cell_volume_source, &par);
+ }
+ 
+-typedef struct {
+-  GfsDomain * domain;
+-  GfsVariable * v;
+-  GfsVariable * fv;
+-  gdouble dt;
+-} InfilParams;
+-
+-static void infiltration_velocity (FttCell * cell, InfilParams * infil)
++static void infiltration_velocity (FttCell * cell, GfsVariable ** u)
+ {
+   g_return_if_fail (GFS_IS_MIXED (cell));
+ 
+hunk ./src/timestep.c 362
+   GfsSolidVector * s = GFS_STATE (cell)->solid;
+   FttVector m = {1.,1.,1.};
+-  gfs_domain_solid_metric (infil->domain, cell, &m);
+-  s->v.x = 0.;
++  gfs_domain_solid_metric (u[0]->domain, cell, &m);
+   FttComponent c;
+   for (c = 0; c < FTT_DIMENSION; c++) {
+hunk ./src/timestep.c 365
+-    GfsVariable * u = gfs_domain_velocity (infil->domain)[c];
+-    if(u->surface_bc) {
+-      (* GFS_SURFACE_GENERIC_BC_CLASS (GTS_OBJECT (u->surface_bc)->klass)->bc)
+-	(cell, u->surface_bc);
++    (&s->v.x)[c] = 0.;
++    if(u[c]->surface_bc) {
++      (* GFS_SURFACE_GENERIC_BC_CLASS (GTS_OBJECT (u[c]->surface_bc)->klass)->bc)
++	(cell, u[c]->surface_bc);
+       if (((cell)->flags & GFS_FLAG_DIRICHLET) != 0)
+hunk ./src/timestep.c 370
+-	s->v.x -= s->fv*(&m.x)[c]*(s->s[2*c+1]-s->s[2*c]);
++	(&s->v.x)[c] -= s->fv*(&m.x)[c]*(s->s[2*c+1]-s->s[2*c]);
+     }
+   }
+ }
+hunk ./src/timestep.c 375
+ 
+-static void solid_infiltration_div (FttCell * cell, InfilParams * infil)
++static void solid_infiltration_div (FttCell * cell, GfsVariable * ddiv)
+ {
+   g_return_if_fail (GFS_IS_MIXED (cell));
+ 
+hunk ./src/timestep.c 379
+-  GfsSolidVector * s = GFS_STATE (cell)->solid;
+-  GFS_VALUE (cell, infil->fv) -= s->v.x*ftt_cell_size (cell);
++  gdouble div = 0.;
++  FttComponent c;
++  for (c = 0; c < FTT_DIMENSION; c++)
++    div += (&GFS_STATE (cell)->solid->v.x)[c];
++  GFS_VALUE (cell, ddiv) -= div*ftt_cell_size (cell);
+ }
+ 
+hunk ./src/timestep.c 386
+-static void solid_infiltration_flux (FttCell * cell, InfilParams * infil)
++static void solid_infiltration_variable (FttCell * cell, GfsAdvectionParams * par)
+ {
+   g_return_if_fail (GFS_IS_MIXED (cell));
+ 
+hunk ./src/timestep.c 391
+   GfsSolidVector * s = GFS_STATE (cell)->solid;
+-  (* GFS_SURFACE_GENERIC_BC_CLASS (GTS_OBJECT (infil->v->surface_bc)->klass)->bc)
+-    (cell, infil->v->surface_bc);
+-  if (((cell)->flags & GFS_FLAG_DIRICHLET) != 0)
+-    GFS_VALUE (cell, infil->fv) += s->fv*s->v.x*infil->dt/ftt_cell_size (cell);
++  (* GFS_SURFACE_GENERIC_BC_CLASS (GTS_OBJECT (par->v->surface_bc)->klass)->bc)
++    (cell, par->v->surface_bc);
++  if (((cell)->flags & GFS_FLAG_DIRICHLET) != 0) {
++    FttComponent c;
++    for ( c = 0; c < FTT_DIMENSION; c++)
++      GFS_VALUE (cell, par->fv) += s->fv*(&s->v.x)[c]*par->dt/ftt_cell_size (cell);
++  }
+ }
+ 
+hunk ./src/timestep.c 400
+-static void solid_infiltration (GfsDomain * domain,
+-				GfsVariable * v,
+-				GfsVariable * fv,
+-				gdouble dt)
++/**
++ * gfs_solid_infiltration:
++ * @domain: a #GfsDomain.
++ *
++ * Calculates the infiltration dirichlet velocities on solids.
++ *
++ * Returns: %TRUE if there is some infiltration velocity, %FALSE otherwise;
++ */
++gboolean gfs_solid_infiltration (GfsDomain * domain)
+ {
+   GfsVariable ** u = gfs_domain_velocity (domain);
+ #if FTT_2D /* 2D */
+hunk ./src/timestep.c 416
+ #else /* 3D */
+   if(u[0]->surface_bc || u[1]->surface_bc || u[2]->surface_bc) {
+ #endif
+-    InfilParams infil = {domain, v, fv, dt};
+     gfs_domain_traverse_mixed (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS,
+hunk ./src/timestep.c 417
+-			       (FttCellTraverseFunc) infiltration_velocity, &infil);
+-    if (v == NULL)
+-      gfs_domain_traverse_mixed (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS,
+-				 (FttCellTraverseFunc) solid_infiltration_div, &infil);
+-    else if (v->surface_bc)
+-      gfs_domain_traverse_mixed (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS,
+-				 (FttCellTraverseFunc) solid_infiltration_flux, &infil);
++			       (FttCellTraverseFunc) infiltration_velocity, u);
++    return TRUE;
+   }
+hunk ./src/timestep.c 420
++  return FALSE;
+ }
+ 
+ static void mac_projection (GfsDomain * domain,
+hunk ./src/timestep.c 463
+ 			    (FttCellTraverseFunc) gfs_normal_divergence, div);
+ 
+   /* Add infiltration from solids */
+-  solid_infiltration (domain, NULL, div, 1.0);
++  gboolean infil = gfs_solid_infiltration (domain);
++  if (infil)
++    gfs_domain_traverse_mixed (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS,
++			       (FttCellTraverseFunc) solid_infiltration_div, div);
+ 
+   /* Divergence hook */
+   if (divergence_hook)
+hunk ./src/timestep.c 955
+     gfs_domain_face_traverse (domain, FTT_XYZ,
+ 			      FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+ 			      (FttFaceTraverseFunc) par->flux, par);
+-    solid_infiltration (domain, v, par->fv, par->dt);
++    gboolean infil = gfs_solid_infiltration (domain);
++    if (infil && par->v->surface_bc)
++      gfs_domain_traverse_mixed (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS,
++				 (FttCellTraverseFunc) solid_infiltration_variable, par);
+     gfs_remove_sinking_velocity (domain, par);
+     par->v = sv;
+     gfs_domain_traverse_merged (domain, par->update, par);
+hunk ./src/timestep.h 99
+                                                gdouble dt,
+                                                GfsFunction * alpha,
+                                                GfsVariable ** g);
++gboolean      gfs_solid_infiltration          (GfsDomain * domain);
+ 
+ /* GfsSurfaceGenericBc: Header */
+ 
+hunk ./src/vof.c 1653
+   GFS_VALUE (cell, p->u) -= gfs_function_value (p->sink, cell);
+ }
+ 
++static void infiltration_flux (FttCell * cell, VofParms * p)
++{
++  g_return_if_fail (GFS_IS_MIXED (cell));
++
++  GfsSolidVector * s = GFS_STATE (cell)->solid;
++  gdouble un = (&s->v.x)[p->c]*p->par->dt/ftt_cell_size (cell);
++  if (p->par->v == p->vof)
++    GFS_VALUE (cell, p->vpar.fv) += un;
++  if (un > 0.) {
++    if (p->par->v->surface_bc) {
++      (* GFS_SURFACE_GENERIC_BC_CLASS (GTS_OBJECT (p->par->v->surface_bc)->klass)->bc)
++	(cell, p->par->v->surface_bc);
++      if (((cell)->flags & GFS_FLAG_DIRICHLET) != 0)
++	GFS_VALUE (cell, p->par->fv) += un*s->fv;
++    }
++  }
++  else
++    GFS_VALUE (cell, p->par->fv) += un*GFS_VALUE (cell, p->vof)*
++      (p->par->v == p->vof ? 1. : GFS_VALUE (cell, p->par->v));
++}
++
+ /**
+  * gfs_tracer_vof_advection:
+  * @domain: a #GfsDomain.
+hunk ./src/vof.c 1688
+   VofParms p;
+   static FttComponent cstart = 0;
+   FttComponent c, d;
++  gboolean infil;
+ 
+   g_return_if_fail (domain != NULL);
+   g_return_if_fail (par != NULL);
+hunk ./src/vof.c 1708
+   p.vpar.average = par->average;
+   gfs_domain_traverse_leaves (domain, (FttCellTraverseFunc) initialize_dV, p.vpar.v);
+   par->fv = gfs_temporary_variable (domain);
++  infil = gfs_solid_infiltration (domain);
+   GSList * concentrations = GFS_VARIABLE_TRACER_VOF (p.vof)->concentrations->items, * j;
+   j = concentrations;
+   while (j) {
+hunk ./src/vof.c 1729
+     gfs_domain_face_traverse (domain, p.c,
+ 			      FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+ 			      (FttFaceTraverseFunc) vof_flux, &p);
++    if (infil)
++      gfs_domain_traverse_mixed (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS,
++				 (FttCellTraverseFunc) infiltration_flux, &p);
+     j = concentrations;
+     while (j) {
+       GfsAdvectionParams * par = &GFS_VARIABLE_TRACER (j->data)->advection;
+hunk ./src/vof.c 1751
+       gfs_domain_face_traverse (domain, p.c,
+ 				FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+ 				(FttFaceTraverseFunc) vof_flux, &p);
++      if (infil)
++	gfs_domain_traverse_mixed (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS,
++				   (FttCellTraverseFunc) infiltration_flux, &p);
+       if (p.sink) {
+ 	gfs_domain_traverse_leaves (domain, (FttCellTraverseFunc) remove_sink_velocity, &p);
+ 	p.sink = NULL;
+
+Context:
+
+[TAG 2013-12-06
+Release**20131206155120
+ Ignore-this: f748ac926027c6c4b74935e99823f580
+] 
+Patch bundle hash:
+bbcf5e777098d084d250b3473a6e87552d4aa0e5

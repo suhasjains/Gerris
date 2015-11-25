@@ -1,0 +1,657 @@
+
+New patches:
+
+[unrevert
+anon**20131226092020
+ Ignore-this: cb8fe4fd2ad260cde7102fbe6205c9c4
+] hunk ./modules/particulatecommon.c 756
+   
+   if ((* GFS_EVENT_CLASS (GTS_OBJECT_CLASS (gfs_particle_list_class ())->parent_class)->event)
+       (event, sim)) {
+-    
++  
+     gfs_particle_bc (GFS_PARTICLE_LIST(event)); 
+ 
+     /*FixMe Call the function below only when required*/    
+hunk ./modules/particulatecommon.c 921
+ typedef struct {
+   GfsVariable * tag, * c, *t;
+   Droplets * drops;
++  gdouble * volume;
++  FttVector * pos;
+   gdouble * alpha;
+   GfsVariable **u;
+   guint * sizes;
+hunk ./modules/particulatecommon.c 951
+   FttVector pos; 
+   ftt_cell_pos (cell, &pos);
+   GfsVariable ** u = p->u;
+-
+   if (i > 0) {
+     p->sizes[i - 1]++;
+     vol = pow (h, FTT_DIMENSION);
+hunk ./modules/particulatecommon.c 954
+-    p->drops[i-1].volume += vol*GFS_VALUE (cell, p->c);
++    /* p->drops[i-1].volume += vol*GFS_VALUE (cell, p->c); */
++    p->volume[i-1] += vol*GFS_VALUE (cell, p->c);
+     FttComponent c;
+     for(c = 0; c < FTT_DIMENSION; c++){
+hunk ./modules/particulatecommon.c 958
+-      (&(p->drops[i-1].pos.x))[c] +=  (&pos.x)[c];
+-      (&(p->drops[i-1].vel.x))[c] += GFS_VALUE (cell,u[c]);
++      //   (&(p->drops[i-1].pos.x))[c] +=  (&pos.x)[c];
++       (&(p->drops[i-1].vel.x))[c] += GFS_VALUE (cell,u[c]);
++            (&(p->pos[i-1].x))[c] +=  (&pos.x)[c];
++      //      (&(p->vel[i-1].x))[c] += GFS_VALUE (cell,u[c]);
+     }
+   }  
+ }
+hunk ./modules/particulatecommon.c 974
+   if (i>0)  {
+     gfs_vof_center(cell, p->c, &pos);
+     FttVector center;
+-     for (c = 0; c < FTT_DIMENSION; c++) {
+-      	(&center.x)[c] = (&p->drops[i].pos.x)[c]/p->sizes[i];
++         for (c = 0; c < FTT_DIMENSION; c++) {
++	   (&center.x)[c] = (&p->drops[i-1].pos.x)[c]/p->sizes[i-1];
+ 	}
+hunk ./modules/particulatecommon.c 977
+-    FttVector radius = subs_fttvectors_abs(&pos, &center);
+-    double distance = (radius.x*radius.x + radius.y*radius.y + radius.z*radius.z)/((3./4.*M_PI)*pow(p->drops[i-1].volume,1./3.));
++    FttVector radius = subs_fttvectors(&pos, &center);
++    double distance = (pow((radius.x*radius.x + radius.y*radius.y + radius.z*radius.z),1./2.))/(pow((3./(4.*M_PI))*p->drops[i-1].volume,1./3.));
++    //printf("%lf \n",distance);
+     if (distance > p->alpha[i-1])
+       p->alpha[i-1] = distance;
+   }
+hunk ./modules/particulatecommon.c 1029
+   assign_forces ( part , plist->forces);
+ }
+ 
++
+ static void convert_droplets (GfsDomain * domain, 
+ 			      DropletsPar * pars, GfsDropletToParticle * d)
+ {
+hunk ./modules/particulatecommon.c 1036
+   GfsSimulation * sim = gfs_object_simulation (d); 
+   guint i;
+   pars->sizes = g_malloc0 (pars->n*sizeof (guint));  
+-  pars->drops = g_malloc0 (pars->n*sizeof (Droplets));
++  pars->drops = g_malloc0 (pars->n*sizeof (Droplets)); 
++  pars->volume = g_malloc0 (pars->n*sizeof (gdouble));
++  pars->pos = g_malloc0 (pars->n*sizeof (FttVector));
+   pars->alpha = g_malloc0 (pars->n*sizeof (gdouble));
+   FttComponent c;
+   /* Initialize drops */
+hunk ./modules/particulatecommon.c 1043
+   for (i = 0; i < pars->n; i++){
+-    pars->drops[i].volume = 0.;
++    //    pars->drops[i].volume = 0. ;
++    pars->volume[i] = 0.;
+     pars->sizes[i] = 0;
+     pars->alpha[i] = 1.;
+     for(c = 0; c < FTT_DIMENSION; c++) {
+hunk ./modules/particulatecommon.c 1048
+-      (&(pars->drops[i].pos.x))[c] = 0.;
+-      (&(pars->drops[i].vel.x))[c] = 0.;
++           /* (&(pars->drops[i].pos.x))[c] = 0.; */
++           (&(pars->drops[i].vel.x))[c] = 0.;
++     (&(pars->pos[i].x))[c] = 0.;
++     /*  (&(pars->vel[i].x))[c] = 0.; */
+     }
+   }
+   gfs_domain_cell_traverse (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+hunk ./modules/particulatecommon.c 1056
+ 			    (FttCellTraverseFunc) compute_droplet_properties, pars);
+-  gfs_domain_cell_traverse_condition (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+-  				      (FttCellTraverseFunc) droplet_conversion , pars, is_interfacial, pars->c);
++  /* printf("%d \n\n\n",pars->n ); */
++  /* printf("%lf  ",pars->drops[1].pos.x); */
++
++     //     gfs_domain_cell_traverse_condition (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
++     //			      (FttCellTraverseFunc) droplet_conversion , pars, is_interfacial, pars->c);
+ #ifdef HAVE_MPI
+   if (domain->pid >= 0) {
+     guint * sizes = g_malloc0 (pars->n*sizeof (guint));
+hunk ./modules/particulatecommon.c 1064
++    //   Droplets * drops = g_malloc0 (pars->n*sizeof (Droplets));   
++    gdouble * volume = g_malloc0 (pars->n*sizeof (gdouble));
++    gdouble * a = g_malloc0 (pars->n*sizeof (gdouble));
++    gdouble * b = g_malloc0 (pars->n*sizeof (gdouble));
++    gdouble * c = g_malloc0 (pars->n*sizeof (gdouble));
+     MPI_Allreduce (pars->sizes, sizes, pars->n, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
+hunk ./modules/particulatecommon.c 1070
++    MPI_Allreduce (pars->volume, volume, pars->n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
++    MPI_Allreduce (&pars->pos->x, a, pars->n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
++    MPI_Allreduce (&pars->pos->y, b, pars->n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);    
++    MPI_Allreduce (&pars->pos->z, c, pars->n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
++
+     g_free (pars->sizes);
+hunk ./modules/particulatecommon.c 1076
++    //   g_free (pars->drops);
++    g_free (pars->volume);
++    g_free (pars->pos);
+     pars->sizes = sizes;
+hunk ./modules/particulatecommon.c 1080
++    pars->volume = volume;
++    pars->pos->x = a;
++    pars->pos->y = b;
++    pars->pos->z = c;
+   }
+ #endif
+   if (d->min >= 0)
+hunk ./modules/particulatecommon.c 1097
+     pars->min = tmp[-1 - d->min];
+     g_free (tmp);
+   }
+-  
+-  for (i = 0; i < pars->n; i++) {
+-    if (pars->sizes[i] < pars->min && pars->alpha[i] < 2){
++
++  for (i = 0; i < pars->n; i++) {  
++    // printf("Eccentricity of drop is %lf \n",pars->alpha[i]);
++    if (pars->sizes[i] < pars->min ){
+       GfsParticulate newpart; 
+hunk ./modules/particulatecommon.c 1102
+-      for (c = 0; c < FTT_DIMENSION; c++) {
+-      	(&newpart.parent.pos.x)[c] = (&pars->drops[i].pos.x)[c]/pars->sizes[i];
+-	(&newpart.vel.x)[c] = (&pars->drops[i].vel.x)[c]/pars->sizes[i];
++      for (c = 0; c < FTT_DIMENSION; c++) {  
++	     	/* (&newpart.parent.pos.x)[c] = (&pars->drops[i].pos.x)[c]/pars->sizes[i]; */
++		(&newpart.vel.x)[c] = (&pars->drops[i].vel.x)[c]/pars->sizes[i];
++		(&newpart.parent.pos.x)[c] = (&pars->pos[i].x)[c]/pars->sizes[i];
++	/* (&newpart.vel.x)[c] = (&pars->vel[i].x)[c]/pars->sizes[i]; */
+       }
+       FttCell * cell = gfs_domain_locate (domain, newpart.parent.pos, -1, NULL);    
+       if (cell) {
+hunk ./modules/particulatecommon.c 1110
+-	newpart.volume = pars->drops[i].volume;
++	//	printf("%lf  ",pars->drops[i].volume);
++	//     	newpart.volume = pars->drops[i].volume;
++      	newpart.volume = pars->volume[i];
+ 	newpart.mass = sim->physical_params.alpha ? 1./
+ 	  gfs_function_value (sim->physical_params.alpha, cell) : 1.;
+ 	newpart.mass *= newpart.volume;
+hunk ./modules/particulatecommon.c 1125
+   g_free (pars->drops);
+   g_free (pars->sizes);
+   g_free (pars->alpha);
+- 
++  g_free (pars->volume); 
++  g_free (pars->pos);
++
++  /* g_free (pars->vel); */
++  /* g_free (pars->pos); */
+ }
+ 
+ /* GfsDropletToParticle: object */
+hunk ./modules/particulatecommon.c 2389
+ 
+ /** \endobject{GfsFeedParticle} */
+ 
+-/* /\* feed particle 2 test case *\/ */
+-
+-/* static void feed_particulate2 (GfsDomain * domain,  */
+-/* 			     GfsFeedParticle2 * feedp) */
+-/* { */
+-/*   GfsParticulate newpart;  */
+-/*   newpart.parent.pos.x = gfs_function_value (feedp->posx, NULL);  */
+-/*   newpart.parent.pos.y = gfs_function_value (feedp->posy, NULL);  */
+-/*   newpart.parent.pos.z = gfs_function_value (feedp->posz, NULL);  */
+-
+-/*   FttCell * cell = gfs_domain_locate (domain, newpart.parent.pos, -1, NULL);     */
+-/*   if (cell) { */
+-/*     newpart.vel.x  = gfs_function_value (feedp->velx, cell); */
+-/*     newpart.vel.y  = gfs_function_value (feedp->vely, cell); */
+-/*     newpart.vel.z  = gfs_function_value (feedp->velz, cell); */
+-/*     newpart.volume = gfs_function_value (feedp->vol, cell); */
+-/*     newpart.mass = gfs_function_value (feedp->mass, cell); */
+-/*     add_particulate (newpart,feedp->plist); */
+-/*   }        */
+-/* } */
+-
+-/* static gboolean gfs_feed_particle2_event (GfsEvent * event, GfsSimulation * sim) */
+-/* {  */
+-/*   if ((* GFS_EVENT_CLASS (GTS_OBJECT_CLASS (gfs_feed_particle2_class ())->parent_class)->event) */
+-/*       (event, sim)) {   */
+-/*     GfsDomain * domain = GFS_DOMAIN (sim); */
+-/*     GfsFeedParticle2 * feedp = GFS_FEED_PARTICLE2 (event); */
+-/*     gint i; */
+-/*     guint np = gfs_function_value (feedp->np, NULL); */
+-
+-/*     for (i = 0; i < np; i++) */
+-/*       feed_particulate2 (domain, feedp); */
+-/*     return TRUE; */
+-/*   } */
+-/*   return FALSE; */
+-/* } */
+-
+-/* static void gfs_feed_particle2_destroy (GtsObject * o) */
+-/* { */
+-/*   gts_object_destroy (GTS_OBJECT (GFS_FEED_PARTICLE2 (o)->np)); */
+-/*   gts_object_destroy (GTS_OBJECT (GFS_FEED_PARTICLE2 (o)->posx)); */
+-/*   gts_object_destroy (GTS_OBJECT (GFS_FEED_PARTICLE2 (o)->posy)); */
+-/*   gts_object_destroy (GTS_OBJECT (GFS_FEED_PARTICLE2 (o)->posz)); */
+-/*   gts_object_destroy (GTS_OBJECT (GFS_FEED_PARTICLE2 (o)->velx)); */
+-/*   gts_object_destroy (GTS_OBJECT (GFS_FEED_PARTICLE2 (o)->vely)); */
+-/*   gts_object_destroy (GTS_OBJECT (GFS_FEED_PARTICLE2 (o)->velz)); */
+-/*   gts_object_destroy (GTS_OBJECT (GFS_FEED_PARTICLE2 (o)->mass)); */
+-/*   gts_object_destroy (GTS_OBJECT (GFS_FEED_PARTICLE2 (o)->vol)); */
+-
+-/*   (* GTS_OBJECT_CLASS (gfs_feed_particle2_class ())->parent_class->destroy) (o);  */
+-/* } */
+-
+-/* static void gfs_feed_particle2_read (GtsObject ** o, GtsFile * fp) */
+-/* {   */
+-/*   if (GTS_OBJECT_CLASS (gfs_feed_particle2_class ())->parent_class->read) */
+-/*     (* GTS_OBJECT_CLASS (gfs_feed_particle2_class ())->parent_class->read) (o, fp); */
+-/*   if (fp->type == GTS_ERROR) */
+-/*     return; */
+-
+-/*   GfsFeedParticle2 * feedp = GFS_FEED_PARTICLE2(*o); */
+-
+-/*   if (fp->type != GTS_STRING) { */
+-/*     gts_file_error (fp, "expecting a string (object name)"); */
+-/*     return; */
+-/*   } */
+-
+-/*   GtsObject * object = gfs_object_from_name (GFS_DOMAIN (gfs_object_simulation (*o)),  */
+-/* 					     fp->token->str); */
+-/*   if (object == NULL) { */
+-/*     gts_file_error (fp, "unknown object '%s'", fp->token->str); */
+-/*     return; */
+-/*   } */
+-/*   if (!GFS_IS_PARTICLE_LIST (object)) { */
+-/*     gts_file_error (fp, "object '%s' is not a GfsParticleList", fp->token->str); */
+-/*     return;   */
+-/*   } */
+-/*   gts_file_next_token (fp); */
+-  
+-/*   feedp->plist = GFS_PARTICLE_LIST (object); */
+-
+-
+-/*   if (fp->type != '{') { */
+-/*     gts_file_error (fp, "expecting an opening brace"); */
+-/*     return; */
+-/*   } */
+-/*   fp->scope_max++; */
+-/*   gts_file_next_token (fp); */
+-
+-/*   while (fp->type != GTS_ERROR && fp->type != '}') { */
+-/*     if (fp->type == '\n') { */
+-/*       gts_file_next_token (fp); */
+-/*       continue; */
+-/*     } */
+-/*       if (fp->type != GTS_STRING) { */
+-/*       gts_file_error (fp, "expecting a keyword"); */
+-/*       return; */
+-/*     }   */
+-/*   else if (!strcmp (fp->token->str, "nparts")) { */
+-/*       gts_file_next_token (fp); */
+-/*       if (fp->type != '=') { */
+-/*         gts_file_error (fp, "expecting '='"); */
+-/*         return; */
+-/*       }     */
+-/*       gts_file_next_token (fp); */
+-/*       gfs_function_read (feedp->np, gfs_object_simulation (*o), fp);     */
+-/*     } */
+-/* else if (!strcmp (fp->token->str, "condition")) { */
+-/*       gts_file_next_token (fp); */
+-/*       if (fp->type != '=') { */
+-/*         gts_file_error (fp, "expecting '='"); */
+-/*         return; */
+-/*       }     */
+-/*       gts_file_next_token (fp); */
+-/*       gfs_function_read (feedp->condition, gfs_object_simulation (*o), fp);     */
+-/*     } */
+-/*     else if (!strcmp (fp->token->str, "xfeed")) { */
+-/*       gts_file_next_token (fp); */
+-/*       if (fp->type != '=') { */
+-/*         gts_file_error (fp, "expecting '='"); */
+-/*         return; */
+-/*       } */
+-/*       gts_file_next_token (fp); */
+-/*       gfs_function_read (feedp->posx, gfs_object_simulation (*o), fp);     */
+-/*     } */
+-/*     else if (!strcmp (fp->token->str, "yfeed")) { */
+-/*       gts_file_next_token (fp); */
+-/*       if (fp->type != '=') { */
+-/*         gts_file_error (fp, "expecting '='"); */
+-/*         return; */
+-/*       } */
+-/*       gts_file_next_token (fp); */
+-/*       gfs_function_read (feedp->posy, gfs_object_simulation (*o), fp);     */
+-/*     } */
+-/*     else if (!strcmp (fp->token->str, "zfeed")) { */
+-/*       gts_file_next_token (fp); */
+-/*       if (fp->type != '=') { */
+-/*         gts_file_error (fp, "expecting '='"); */
+-/*         return; */
+-/*       } */
+-/*       gts_file_next_token (fp); */
+-/*       gfs_function_read (feedp->posz, gfs_object_simulation (*o), fp);     */
+-/*     } */
+-/*     else if (!strcmp (fp->token->str, "velx")) { */
+-/*       gts_file_next_token (fp); */
+-/*       if (fp->type != '=') { */
+-/*         gts_file_error (fp, "expecting '='"); */
+-/*         return; */
+-/*       } */
+-/*       gts_file_next_token (fp); */
+-/*       gfs_function_read (feedp->velx, gfs_object_simulation (*o), fp);     */
+-/*     } */
+-/*     else if (!strcmp (fp->token->str, "vely")) { */
+-/*       gts_file_next_token (fp); */
+-/*       if (fp->type != '=') { */
+-/*         gts_file_error (fp, "expecting '='"); */
+-/*         return; */
+-/*       } */
+-/*       gts_file_next_token (fp); */
+-/*       gfs_function_read (feedp->vely, gfs_object_simulation (*o), fp);     */
+-/*     } */
+-/*     else if (!strcmp (fp->token->str, "velz")) { */
+-/*       gts_file_next_token (fp); */
+-/*       if (fp->type != '=') { */
+-/*         gts_file_error (fp, "expecting '='"); */
+-/*         return; */
+-/*       } */
+-/*       gts_file_next_token (fp); */
+-/*       gfs_function_read (feedp->velz, gfs_object_simulation (*o), fp);     */
+-/*     } */
+-/*     else if (!strcmp (fp->token->str, "mass")) { */
+-/*       gts_file_next_token (fp); */
+-/*       if (fp->type != '=') { */
+-/*         gts_file_error (fp, "expecting '='"); */
+-/*         return; */
+-/*       } */
+-/*       gts_file_next_token (fp); */
+-/*       gfs_function_read (feedp->mass, gfs_object_simulation (*o), fp);     */
+-/*     } */
+-/*     else if (!strcmp (fp->token->str, "volume")) { */
+-/*       gts_file_next_token (fp); */
+-/*       if (fp->type != '=') { */
+-/*         gts_file_error (fp, "expecting '='"); */
+-/*         return; */
+-/*       } */
+-/*       gts_file_next_token (fp); */
+-/*       gfs_function_read (feedp->vol, gfs_object_simulation (*o), fp);     */
+-/*     } */
+-/*     else { */
+-/*       gts_file_error (fp, "unknown keyword `%s'", fp->token->str); */
+-/*       return; */
+-/*     } */
+-/*   } */
+-/*   if (fp->type == GTS_ERROR) */
+-/*     return; */
+-/*   if (fp->type != '}') { */
+-/*     gts_file_error (fp, "expecting a closing brace"); */
+-/*     return; */
+-/*   } */
+-/*   fp->scope_max--; */
+-/*   gts_file_next_token (fp); */
+-
+-/* } */
+-
+-/* static void gfs_feed_particle2_write (GtsObject * o, FILE * fp) */
+-/* { */
+-/*   (* GTS_OBJECT_CLASS (gfs_feed_particle2_class ())->parent_class->write) (o, fp); */
+-
+-/*   GfsFeedParticle2 * feedp = GFS_FEED_PARTICLE2(o); */
+-
+-/*   fprintf (fp, " %s", GFS_EVENT (feedp->plist)->name);  */
+-
+-/*   fputs (" {\n  nparts = ", fp); */
+-/*   gfs_function_write (feedp->np, fp); */
+-/*   fputs ("  xfeed =", fp); */
+-/*   gfs_function_write (feedp->posx, fp); */
+-/*   fputs (" yfeed =", fp); */
+-/*   gfs_function_write (feedp->posy, fp); */
+-/*   fputs (" zfeed =", fp); */
+-/*   gfs_function_write (feedp->posz, fp); */
+-/*   fputs ("\n  velx =", fp); */
+-/*   gfs_function_write (feedp->velx, fp); */
+-/*   fputs (" vely =", fp); */
+-/*   gfs_function_write (feedp->vely, fp); */
+-/*   fputs (" velz =", fp); */
+-/*   gfs_function_write (feedp->velz, fp); */
+-/*   fputs ("\n  mass =", fp); */
+-/*   gfs_function_write (feedp->mass, fp); */
+-/*   fputs ("\n  volume =", fp); */
+-/*   gfs_function_write (feedp->vol, fp); */
+-/*   fputs ("\n}", fp); */
+-/* } */
+-
+-/* static void gfs_feed_particle2_class_init (GfsEventClass * klass) */
+-/* { */
+-/*   GFS_EVENT_CLASS (klass)->event    = gfs_feed_particle2_event; */
+-/*   GTS_OBJECT_CLASS (klass)->destroy = gfs_feed_particle2_destroy; */
+-/*   GTS_OBJECT_CLASS (klass)->read    = gfs_feed_particle2_read; */
+-/*   GTS_OBJECT_CLASS (klass)->write   = gfs_feed_particle2_write;   */
+-/* } */
+-
+-/* static void gfs_feed_particle2_init ( GfsFeedParticle2 * feedp) */
+-/* { */
+-/*   feedp->np   = gfs_function_new (gfs_function_class (), 1); */
+-/*   feedp->posx = gfs_function_new (gfs_function_class (), 0.); */
+-/*   feedp->posy = gfs_function_new (gfs_function_class (), 0.); */
+-/*   feedp->posz = gfs_function_new (gfs_function_class (), 0.); */
+-/*   feedp->velx = gfs_function_new (gfs_function_class (), 0.); */
+-/*   feedp->vely = gfs_function_new (gfs_function_class (), 0.); */
+-/*   feedp->velz = gfs_function_new (gfs_function_class (), 0.); */
+-/*   feedp->mass = gfs_function_new (gfs_function_class (), 0.); */
+-/*   feedp->vol  = gfs_function_new (gfs_function_class (), 0.); */
+-/* } */
+-
+-/* GfsEventClass * gfs_feed_particle2_class (void) */
+-/* { */
+-/*   static GfsEventClass * klass = NULL; */
+-
+-/*   if (klass == NULL) { */
+-/*     GtsObjectClassInfo gfs_feed_particle2_info = { */
+-/*       "GfsFeedParticle2", */
+-/*       sizeof (GfsFeedParticle2), */
+-/*       sizeof (GfsEventClass), */
+-/*       (GtsObjectClassInitFunc) gfs_feed_particle2_class_init, */
+-/*       (GtsObjectInitFunc) gfs_feed_particle2_init, */
+-/*       (GtsArgSetFunc) NULL, */
+-/*       (GtsArgGetFunc) NULL */
+-/*     }; */
+-/*     klass = gts_object_class_new (GTS_OBJECT_CLASS (gfs_event_class ()), */
+-/* 				  &gfs_feed_particle2_info); */
+-/*   } */
+-/*   return klass; */
+-/* } */
+-
+-/** \endobject{GfsFeedParticle2} */
+ 
+ /** /beginobject{GfsBcParticle} */
+ 
+hunk ./modules/particulates.c 26
+ 
+ /* GfsPdfParticle: header */
+ 
++static FttVector subs_fttvectors (FttVector *a, FttVector *b)
++{
++  FttVector result;
++  FttComponent c;
++  for(c = 0; c< FTT_DIMENSION; c++)    
++    (&result.x)[c]  = (&a->x)[c] - (&b->x)[c];  
++  return result;
++}
++
+ typedef struct _GfsPdfParticle GfsPdfParticle;
+ 
+ struct _GfsPdfParticle{
+hunk ./modules/particulates.c 46
+   gchar * name;
+   gint nbins;
+   gdouble dbin;
++  gdouble dabin;
+   gdouble rmin,rmax;
+hunk ./modules/particulates.c 48
++  gdouble amin,amax;
+   GfsVariable *c;  
+   GfsVariable *npcell,*meanpcell,*sdpcell;
+ };
+hunk ./modules/particulates.c 74
+   GfsVariable **u;
+   guint n;
+   gdouble rmin,rmax;
++  gdouble amin,amax;
+   GfsPdfParticle *pdf;
+   GfsDomain *domain;
+hunk ./modules/particulates.c 77
++  gdouble * alpha;
+ } DropletsPar;
+ 
+ static void compute_droplet_properties (FttCell * cell, DropletsPar * p)
+hunk ./modules/particulates.c 100
+   }  
+ }
+ 
++static void droplet_conversion(FttCell * cell, DropletsPar *p)
++{
++  gint i = GFS_VALUE(cell, p->tag);
++  FttVector pos;
++  FttComponent c;
++  if (i>0)  {
++    gfs_vof_center(cell, p->c, &pos);
++    FttVector center;
++         for (c = 0; c < FTT_DIMENSION; c++) {
++	   (&center.x)[c] = (&p->drops[i-1].pos.x)[c]/p->sizes[i-1];
++	}
++    FttVector radius = subs_fttvectors(&pos, &center);
++    double distance = (pow((radius.x*radius.x + radius.y*radius.y + radius.z*radius.z),1./2.))/(pow((3./(4.*M_PI))*p->drops[i-1].volume,1./3.));
++     if (distance > p->alpha[i-1])
++      p->alpha[i-1] = distance;
++  }
++}
++
++static gboolean is_interfacial (FttCell * cell, gpointer data)
++{
++  GfsVariable * f = data;
++  return (GFS_VALUE (cell, f) > 0. && GFS_VALUE (cell, f) < 1.);
++}
++
+ static void reset_pdf (FttCell * cell, GfsPdfParticle * p)
+ {
+   GFS_VALUE(cell,p->npcell) = 0;
+hunk ./modules/particulates.c 141
+ 
+   fprintf(fp,"%lf %lf %lf\n",pos.x,pos.y,pos.z);
+   gdouble *binfill = g_malloc0((pdf->nbins)*sizeof (double));
++  gdouble *abinfill = g_malloc0((pdf->nbins)*sizeof (double));
+   for (int i = 0; i < p->n; i++){
+     FttCell * cell1 = gfs_domain_locate (domain, p->drops[i].pos, pdf->level, NULL);  
+     if(cell1==cell){
+hunk ./modules/particulates.c 146
+       gdouble dia = 2.*pow(3./(4.*M_PI)*p->drops[i].volume,0.333333);
+-      int k = (int)(dia/pdf->dbin);
++      int k = (int)((dia-p->rmin)/pdf->dbin);
++      //printf(" %lf %lf %d\n",dia,pdf->dbin,k);
++      int l = (int)((p->alpha[i]-p->amin)/pdf->dabin);
+       if(k > pdf->nbins-1) k = pdf->nbins-1;
+hunk ./modules/particulates.c 150
+-      //     printf("%d %lf %lf\n",k,dia/pdf->dbin,dia,pdf->dbin);
++      if(l > pdf->nbins-1) l = pdf->nbins-1;
++      //printf("%d %lf %lf\n",k,dia/pdf->dbin,dia,pdf->dbin);
+       binfill[k]++;
+hunk ./modules/particulates.c 153
++      abinfill[l]++;
+     }   
+   }
+hunk ./modules/particulates.c 156
+-  for(int i=0; i<pdf->nbins;i++) fprintf(fp,"%3.14lf %lf\n", (pdf->dbin*i + p->rmin), binfill[i]);  
++  for(int i=0; i<pdf->nbins;i++) fprintf(fp,"%3.14lf %lf %3.14lf %lf \n", (pdf->dbin*i + p->rmin), binfill[i], (pdf->dabin*i + p->amin), abinfill[i]);  
+   g_free(binfill);
+hunk ./modules/particulates.c 158
++  g_free(abinfill);
+   /*To print the cumulants of the pdf*/
+  //      fprintf(fp,"%lf %lf %lf %d %lf\n",pos.x,pos.y,pos.z, (int) GFS_VALUE(cell,p->npcell), GFS_VALUE(cell,p->meanpcell)); 
+    
+hunk ./modules/particulates.c 179
+    p.c = pdf->c;
+    p.tag = gfs_temporary_variable (domain);
+    p.pdf = pdf;
+-
+    p.n = gfs_domain_tag_droplets (domain, p.c, p.tag);
+    p.domain = domain;
+    gdouble meandrop = 0.;
+hunk ./modules/particulates.c 182
++   gdouble meanalpha = 0.;
+    if (p.n > 0){
+      FttComponent c;
+      p.sizes = g_malloc0 (p.n*sizeof (guint));  
+hunk ./modules/particulates.c 187
+      p.drops = g_malloc0 (p.n*sizeof (Droplets));
+-
++     p.alpha = g_malloc0 (p.n*sizeof (double));
+      /* Initialize drops */
+      for (int i = 0; i < p.n; i++){
+        p.drops[i].volume = 0.;
+hunk ./modules/particulates.c 192
+        p.sizes[i] = 0;
++       p.alpha[i] = 0.;
+        for(c = 0; c < FTT_DIMENSION; c++) {
+ 	 (&(p.drops[i].pos.x))[c] = 0.;
+ 	 (&(p.drops[i].vel.x))[c] = 0.;
+hunk ./modules/particulates.c 201
+     
+      gfs_domain_cell_traverse (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+ 			       (FttCellTraverseFunc) compute_droplet_properties, &p);
++     //gfs_domain_cell_traverse_condition (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
++     //				      (FttCellTraverseFunc) droplet_conversion , p, is_interfacial, p.c);
++     gfs_domain_cell_traverse (domain, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
++     				      (FttCellTraverseFunc) droplet_conversion , &p);
+      
+      /* Average Pos and Velocity drops */
+      p.rmin = 100.;
+hunk ./modules/particulates.c 208
+-     p.rmax = 0.;
++     p.rmax = 0.; 
++     p.amin = 100.;
++     p.amax = 0.;
++     
+      for (int i = 0; i < p.n; i++){
+        p.rmin = MIN(p.rmin,p.drops[i].volume);
+        p.rmax = MAX(p.rmax,p.drops[i].volume);
+hunk ./modules/particulates.c 215
++       p.amin = MIN(p.amin, p.alpha[i]);
++       p.amax = MAX(p.amax, p.alpha[i]);
++       meanalpha += p.alpha[i];
+        meandrop += p.drops[i].volume;
+        for(c = 0; c < FTT_DIMENSION; c++) {
+ 	 (&(p.drops[i].pos.x))[c] /= p.sizes[i];
+hunk ./modules/particulates.c 244
+    p.rmin = 2.*pow(3./(4.*M_PI)*p.rmin,0.333333);
+    meandrop = 2.*pow(3./(4.*M_PI)*meandrop/p.n,0.333333);
+    pdf->dbin = (meandrop - p.rmin)/(pdf->nbins/2.);
++   pdf->dabin = (5. - p.amin)/(pdf->nbins); 
+    if(pdf->dbin==0) pdf->dbin = 100000.;
+hunk ./modules/particulates.c 246
++   if(pdf->dabin==0) pdf->dabin = 100000.;
+    gfs_domain_cell_traverse (domain, FTT_PRE_ORDER, FTT_TRAVERSE_ALL, pdf->level,
+    		     (FttCellTraverseFunc) write_pdf, &p); 
+   
+hunk ./modules/particulates.c 252
+    g_free (p.drops);
+    g_free (p.sizes);
++   g_free (p.alpha);
+    return TRUE;
+   }
+   return FALSE;
+
+Context:
+
+[particualte_alpha: calculating the maximum distance of interface from the centroid and diving by radius of equivalent sphere to get alpha
+mohitiitroorkee@gmail.com**20130810124405
+ Ignore-this: 806c5fc0e0b8148a3eff6b220473e42d
+] 
+[particulate_code
+mohitiitroorkee@gmail.com**20130801114058
+ Ignore-this: 715b38fab889654b35b9992937544870
+] 
+[TAG 2013-05-28
+Release**20130531065717] 
+Patch bundle hash:
+a8e13c37d800ac55a9434d7551b6a14b9d7fe053

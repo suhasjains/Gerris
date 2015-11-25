@@ -1,0 +1,11 @@
+prefix=/home/cfd7
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: Gerris2D
+Description: Gerris Flow Solver Library (2D)
+Version: 1.3.2
+Requires: gts >= 0.7.3
+Libs: -L${libdir} -lgfs2D -lgts -lm
+Cflags: -I${includedir} -DFTT_2D=1

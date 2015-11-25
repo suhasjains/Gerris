@@ -1,0 +1,4534 @@
+
+myc.h,47
+#define NOT_ZERO 1,0
+static void mycs(17,496
+
+source.h,3921
+#define __SOURCE_H__21,859
+typedef struct _GfsSourceGeneric         GfsSourceGeneric;41,1324
+struct _GfsSourceGeneric 43,1384
+  GfsEvent parent;45,1429
+  GfsVariable * v;48,1466
+  gdouble (* mac_value)49,1485
+  gdouble (* centered_value)50,1562
+  gdouble (* face_value)51,1639
+  void    (* flux)52,1720
+typedef struct _GfsSourceGenericClass    GfsSourceGenericClass;57,1847
+struct _GfsSourceGenericClass 59,1912
+  GfsEventClass parent_class;61,1962
+  gdouble (* stability)64,2010
+#define GFS_SOURCE_GENERIC(67,2082
+#define GFS_SOURCE_GENERIC_CLASS(70,2224
+#define GFS_IS_SOURCE_GENERIC(73,2364
+typedef struct _GfsSourceScalar         GfsSourceScalar;82,2677
+struct _GfsSourceScalar 84,2735
+  GfsSourceGeneric parent;86,2779
+  GfsVariable * v;89,2824
+  GfsVariable * vector[vector90,2843
+#define GFS_SOURCE_SCALAR(93,2886
+#define GFS_IS_SOURCE_SCALAR(96,3025
+typedef struct _GfsSourceVelocity         GfsSourceVelocity;103,3228
+struct _GfsSourceVelocity 105,3290
+  GfsSourceGeneric parent;107,3336
+  GfsVariable ** v;110,3381
+#define GFS_SOURCE_VELOCITY(113,3405
+#define GFS_IS_SOURCE_VELOCITY(116,3550
+typedef struct _GfsSource         GfsSource;123,3751
+struct _GfsSource 125,3797
+  GfsSourceScalar parent;127,3835
+  GfsFunction * intensity;130,3879
+  GfsFunction * intensity_v[intensity_v131,3906
+#define GFS_SOURCE(134,3954
+#define GFS_IS_SOURCE(137,4073
+typedef struct _GfsSourceControl         GfsSourceControl;144,4254
+struct _GfsSourceControl 146,4314
+  GfsSourceScalar parent;148,4359
+  gdouble s;149,4385
+  GfsFunction * intensity;152,4416
+#define GFS_SOURCE_CONTROL(155,4447
+#define GFS_IS_SOURCE_CONTROL(158,4589
+typedef struct _GfsSourceControlField         GfsSourceControlField;165,4799
+struct _GfsSourceControlField 167,4869
+  GfsSourceControl parent;169,4919
+  GfsVariable * s;170,4946
+  gdouble tau;173,4983
+  gint level;174,4998
+#define GFS_SOURCE_CONTROL_FIELD(177,5016
+#define GFS_IS_SOURCE_CONTROL_FIELD(180,5175
+typedef struct _GfsSourceFlux         GfsSourceFlux;187,5395
+struct _GfsSourceFlux 189,5449
+  GfsSourceScalar parent;191,5491
+  gdouble s;192,5517
+  GfsFunction * intensity,195,5548
+  GfsFunction * intensity, * fraction;195,5548
+#define GFS_SOURCE_FLUX(198,5591
+#define GFS_IS_SOURCE_FLUX(201,5724
+struct _GfsDiffusion 208,5916
+  GfsEvent parent;210,5957
+  GfsFunction * val;213,5994
+  GfsVariable * mu;214,6015
+  GfsMultilevelParams par;215,6035
+typedef struct _GfsDiffusionClass    GfsDiffusionClass;218,6066
+struct _GfsDiffusionClass 220,6123
+  GfsEventClass parent_class;222,6169
+  gdouble (* face)225,6217
+  gdouble (* cell)226,6270
+#define GFS_DIFFUSION(229,6323
+#define GFS_DIFFUSION_CLASS(232,6451
+#define GFS_IS_DIFFUSION(235,6577
+struct _GfsSourceDiffusion 246,6936
+  GfsSourceScalar parent;248,6983
+  GfsDiffusion * D;251,7027
+  GfsVariable * phi;252,7047
+#define GFS_SOURCE_DIFFUSION(255,7072
+#define GFS_IS_SOURCE_DIFFUSION(258,7220
+typedef struct _GfsSourceDiffusionExplicit         GfsSourceDiffusionExplicit;269,7663
+struct _GfsSourceDiffusionExplicit 271,7743
+  GfsSourceDiffusion parent;273,7798
+#define GFS_SOURCE_DIFFUSION_EXPLICIT(278,7849
+#define GFS_IS_SOURCE_DIFFUSION_EXPLICIT(281,8023
+typedef struct _GfsSourceViscosity         GfsSourceViscosity;288,8263
+struct _GfsSourceViscosity 290,8327
+  GfsSourceDiffusion parent;292,8374
+  GfsVariable ** v;295,8421
+#define GFS_SOURCE_VISCOSITY(298,8445
+#define GFS_IS_SOURCE_VISCOSITY(301,8593
+#define GFS_IS_SOURCE_VISCOSITY_EXPLICIT(308,8810
+typedef struct _GfsSourceCoriolis         GfsSourceCoriolis;315,9046
+struct _GfsSourceCoriolis 317,9108
+  GfsSourceVelocity parent;319,9154
+  GfsVariable * u[u320,9182
+  GfsFunction * omegaz;323,9234
+  GfsFunction *   drag;324,9285
+  gdouble         beta;325,9339
+  double          d[d326,9421
+#define GFS_SOURCE_CORIOLIS(329,9493
+#define GFS_IS_SOURCE_CORIOLIS(332,9638
+
+poisson.c,3377
+void gfs_multilevel_params_write 40,1239
+void gfs_multilevel_params_init 70,1923
+void gfs_multilevel_params_read 91,2326
+static gdouble rate 128,3612
+void gfs_multilevel_params_stats_write 142,3903
+GfsLinearProblem * gfs_linear_problem_new 182,4910
+void gfs_linear_problem_add_stencil 206,5560
+void gfs_linear_problem_destroy 221,5871
+  GfsLinearProblem * lp;241,6349
+  GfsVariable * dia;242,6374
+  gint maxlevel;243,6395
+  GfsVariable * metric,244,6412
+  GfsVariable * metric, * rhs;244,6412
+} RelaxStencilParams;245,6443
+static void relax_stencil 247,6466
+static void relax_dirichlet_stencil 278,7293
+  GfsLinearProblem * lp;313,8420
+  GfsVariable * lhs,314,8445
+  GfsVariable * lhs, * rhs;314,8445
+  guint nleafs;315,8473
+  gint maxlevel;316,8489
+  FttFaceTraverseFunc bc_number;317,8506
+} NumberingParams;318,8539
+static void leaves_numbering 320,8559
+static void bc_number 328,8867
+static void reset_bc 337,9204
+static void box_reset_bc 343,9375
+static void set_mpi_domain_index 358,9814
+static void leaves_renumbering 375,10265
+  GfsVariable * lhs;383,10425
+  gboolean dirichlet;384,10446
+} CompatPar;385,10468
+static void check_box_dirichlet 387,10482
+static void cell_numbering 401,10847
+GfsLinearProblem * gfs_get_poisson_problem 439,12147
+  guint u,498,14299
+  guint u, rhs,498,14299
+  guint u, rhs, dia,498,14299
+  guint u, rhs, dia, res;498,14299
+  gint maxlevel;499,14325
+  gdouble beta,500,14342
+  gdouble beta, omega;500,14342
+  guint metric;501,14365
+} RelaxParams;502,14381
+static void relax 507,14478
+static void relax2D 532,15061
+static void relax_dirichlet 561,15807
+void gfs_relax 604,17186
+static void residual_set 634,17863
+static void residual_set2D 657,18426
+static void residual_set_dirichlet 680,18997
+void gfs_residual 721,20289
+  gdouble lambda2[lambda2750,21032
+  GfsFunction * alpha;751,21066
+  GfsDomain * domain;752,21089
+  gboolean positive;753,21111
+} PoissonCoeff;754,21132
+static void reset_coeff 756,21149
+static void poisson_coeff 768,21433
+static void poisson_mixed_coeff 798,22362
+static void face_coeff_from_below 826,23249
+void gfs_poisson_coefficients 868,24447
+static void tension_coeff 903,25473
+void gfs_source_tension_coefficients 971,27448
+static void correct 998,28168
+static void get_from_above 1005,28333
+static void get_from_below_3D 1044,29313
+static void get_from_below_2D 1057,29607
+static void relax_loop 1070,29898
+void gfs_poisson_cycle 1109,31216
+gdouble gfs_poisson_compatibility 1191,33815
+void gfs_poisson_solve 1225,35105
+  GfsSourceDiffusion * d;1272,36588
+  gdouble lambda2[lambda21273,36614
+  gdouble dt;1274,36648
+  GfsVariable * rhoc,1275,36662
+  GfsVariable * rhoc, * metric;1275,36662
+  GfsFunction * alpha;1276,36694
+  GfsDomain * domain;1277,36717
+} DiffusionCoeff;1278,36739
+static void diffusion_coef 1280,36758
+static void diffusion_mixed_coeff 1303,37413
+static void viscous_metric_coeff 1335,38500
+void gfs_diffusion_coefficients 1357,39233
+static void diffusion_rhs 1401,40544
+void gfs_diffusion_rhs 1447,41912
+static void diffusion_relax 1471,42604
+static void diffusion_relax_stencil 1500,43453
+static void diffusion_residual 1534,44587
+void gfs_diffusion_residual 1587,46036
+void gfs_diffusion_cycle 1633,47496
+static void scale_rhs 1692,49324
+GfsLinearProblem * gfs_get_diffusion_problem 1712,49968
+
+isocube.h,471
+static guint edge1[edge122,916
+static FttVector vertex[vertex27,1050
+static guint face[face31,1177
+static guint face_v[face_v39,1460
+static FttVector edge[edge47,1634
+static guint connectv[connectv52,1966
+static FttVector cvertex[cvertex66,2487
+# define NCORNERS 72,2649
+static FttDirection corner[corner73,2669
+# define NCORNERS 77,2817
+static guint connect[connect81,3032
+static FttDirection corner[corner95,3768
+#define SLIGHTLY_LARGER 107,4108
+
+adaptive.c,4137
+void gfs_cell_coarse_init 43,1222
+  GfsSimulation * sim;66,1651
+  guint nc;67,1674
+  GtsEHeap * hcoarse,68,1686
+  GtsEHeap * hcoarse, * hfine;68,1686
+  gdouble clim;69,1717
+  GfsVariable * hcoarsev,70,1733
+  GfsVariable * hcoarsev, * hfinev,70,1733
+  GfsVariable * hcoarsev, * hfinev, * costv,70,1733
+  GfsVariable * hcoarsev, * hfinev, * costv, * c;70,1733
+} AdaptParams;71,1783
+static void gfs_adapt_destroy 73,1799
+static void none 81,2045
+static void gfs_adapt_read 83,2100
+static void gfs_adapt_write 228,6181
+static gboolean gfs_adapt_event 255,7013
+static void save_cost 270,7420
+static void gfs_adapt_post_event 275,7528
+static void gfs_adapt_class_init 283,7798
+static void gfs_adapt_init 292,8099
+GfsEventClass * gfs_adapt_class 305,8452
+static gboolean gfs_adapt_vorticity_event 331,9045
+static void gfs_adapt_vorticity_class_init 345,9496
+static gdouble cost_vorticity 350,9630
+static void gfs_adapt_vorticity_init 357,9814
+GfsEventClass * gfs_adapt_vorticity_class 362,9943
+static void gfs_adapt_streamline_curvature_init 390,10603
+GfsEventClass * gfs_adapt_streamline_curvature_class 395,10732
+static void gfs_adapt_function_destroy 423,11463
+static void gfs_adapt_function_read 430,11668
+static void gfs_adapt_function_write 439,11946
+static void gfs_adapt_function_class_init 445,12152
+static gdouble function_cost 452,12357
+static void gfs_adapt_function_init 457,12472
+GfsEventClass * gfs_adapt_function_class 463,12658
+static void gfs_adapt_gradient_destroy 491,13361
+static void gfs_adapt_gradient_read 499,13659
+static void update_f 511,14065
+static gboolean gfs_adapt_gradient_event 516,14211
+static void gfs_adapt_gradient_class_init 538,15119
+static gdouble gradient_cost 545,15359
+static void gfs_adapt_gradient_init 560,15726
+GfsEventClass * gfs_adapt_gradient_class 566,15899
+static void gfs_adapt_error_destroy 594,16593
+static void gfs_adapt_error_read 602,16841
+static void compute_gradient 614,17263
+static void add_hessian_norm 620,17451
+static void scale 634,17871
+static gboolean gfs_adapt_error_event 639,18025
+static void gfs_adapt_error_class_init 670,19326
+static gdouble cost_error 677,19572
+static void gfs_adapt_error_init 682,19672
+GfsEventClass * gfs_adapt_error_class 688,19796
+static void gfs_adapt_thickness_destroy 716,20501
+static void gfs_adapt_thickness_read 724,20745
+static void gfs_adapt_thickness_write 753,21615
+static void update_thickness 759,21827
+static gboolean gfs_adapt_thickness_event 781,22641
+static void gfs_adapt_thickness_class_init 793,23036
+static gdouble thickness_cost 801,23343
+static void gfs_adapt_thickness_init 806,23498
+GfsEventClass * gfs_adapt_thickness_class 814,23686
+static void refine_cell_corner 836,24243
+void gfs_domain_reshape 850,24686
+#define CELL_COST(876,25281
+#define CELL_HCOARSE(877,25334
+#define CELL_HFINE(878,25411
+static FttCell * remove_top_coarse 880,25485
+static FttCell * remove_top_fine 894,25839
+static gdouble refine_cost 908,26211
+static void compute_cost 924,26495
+static void store_cost 955,27384
+static guint minlevel 960,27491
+static guint maxlevel 976,27812
+static void fill_heaps 992,28136
+static gboolean fine_cell_coarsenable 1006,28721
+static void fine_cell_cleanup 1021,29096
+static void cell_fine_init 1035,29431
+static gboolean adapt_global 1050,29828
+  GfsSimulation * sim;1144,33119
+  guint depth,1145,33142
+  guint depth, nc;1145,33142
+  GfsVariable * r,1146,33161
+  GfsVariable * r, * c;1146,33161
+  GfsAdaptStats * s;1147,33185
+  gboolean changed;1148,33206
+} AdaptLocalParams;1149,33226
+#define REFINABLE(1151,33247
+#define COARSENABLE(1152,33301
+static gboolean coarsen_cell 1154,33358
+static void cell_cleanup 1163,33582
+static void coarsen_box 1173,33796
+static void local_cell_fine_init 1180,33982
+static void refine_cell 1190,34264
+static void refine_cell_mark 1203,34645
+static void check_periodic 1235,35614
+static void enforce_periodic 1242,35810
+static gboolean adapt_local 1254,36201
+gboolean gfs_simulation_adapt 1297,37682
+void gfs_adapt_stats_init 1362,39381
+void gfs_adapt_stats_update 1379,39666
+
+poisson.h,938
+#define __POISSON_H__21,860
+typedef struct _GfsMultilevelParams GfsMultilevelParams;31,980
+typedef void (* GfsPoissonSolverFunc)32,1037
+struct _GfsMultilevelParams 39,1278
+  gdouble tolerance;40,1308
+  guint nrelax,41,1329
+  guint nrelax, erelax;41,1329
+  guint minlevel;42,1353
+  guint nitermax,43,1371
+  guint nitermax, nitermin;43,1371
+  guint dimension;45,1400
+  guint niter;46,1419
+  guint depth;47,1434
+  gboolean weighted,48,1449
+  gboolean weighted, function;48,1449
+  gdouble beta,49,1480
+  gdouble beta, omega;49,1480
+  GfsNorm residual_before,50,1503
+  GfsNorm residual_before, residual;50,1503
+  GfsPoissonSolverFunc poisson_solve;51,1540
+struct _GfsLinearProblem 129,4427
+  GPtrArray * LP;130,4454
+  GArray * rhs,131,4472
+  GArray * rhs, * lhs;131,4472
+  GfsVariable * id,132,4495
+  GfsVariable * id, * neighbor,132,4495
+  GfsVariable * id, * neighbor, * neighborw;132,4495
+  gint istart;133,4540
+
+river.c,4332
+static gdouble generic_limiter 64,2193
+static gdouble minmod_limiter 71,2352
+static gdouble superbee_limiter 76,2433
+static gdouble sweby_limiter 81,2516
+static gdouble center_limited_gradient_full 86,2597
+static gdouble center_limited_gradient 117,3329
+static gdouble center_minmod_gradient 209,6552
+static gdouble center_superbee_gradient 216,6722
+static gdouble center_sweby_gradient 223,6886
+#define H 235,7125
+#define U 236,7138
+#define V 237,7151
+#define HL 238,7164
+#define T(239,7177
+#define RHO(240,7225
+#define HP(241,7277
+#define HPT(242,7329
+#define ZB 243,7381
+static void flux 245,7403
+static gdouble min 252,7639
+static gdouble max 257,7710
+static void riemann_hllc 271,8035
+#define SQRT3 317,9480
+#define PARENT_TRACER(319,9512
+static double density 321,9604
+static void hydrostatic_pressure 332,10044
+static void riemann_kinetic 348,10556
+  FttComponent u;398,11806
+  gdouble du;399,11824
+  FttComponent v;400,11838
+  gdouble dv;401,11856
+} Sym;402,11870
+#define CFL_CLAMP(404,11878
+static double left 406,11964
+static double right 411,12131
+static void face_fluxes 416,12307
+static gdouble limited_gradient 604,18930
+#define limited_gradient_u(623,19552
+#define limited_gradient_t(625,19676
+static void vertical_advection 628,19798
+static void reset_fluxes 652,20727
+static void solid_boundary_fluxes 661,20956
+static void metric_sources 687,21917
+  double * a;713,22966
+  double * b;714,23019
+  double * c;715,23060
+  double * v;716,23113
+  int n;717,23149
+} Tridiagonal;718,23158
+static void tridiagonal_init 720,23174
+static void tridiagonal_solve 729,23407
+static void tridiagonal_free 743,23756
+static void vertical_diffusion 752,23911
+static void bottom_friction 786,24994
+static void domain_vertical_diffusion 798,25326
+static void advance 847,26877
+static void copy 896,28776
+static void cell_H 903,28938
+static void cell_gradients 916,29301
+  FttCellTraverseFunc func;942,30019
+  FttDirection d;943,30047
+  gpointer data;944,30065
+} FaceTraverseData;945,30082
+static void face_traverse 947,30103
+static void domain_traverse_all_leaves 954,30281
+static void dirichlet_p 969,30730
+static void fix_box_bc 974,30870
+static void river_run 998,31673
+static gdouble maximum_face_metric 1082,34700
+static void minimum_cfl 1096,35055
+static gdouble river_cfl 1119,35702
+static void river_tracer_read 1130,36058
+static void river_read 1178,37828
+static void river_write 1254,40191
+static void river_destroy 1281,40874
+static void river_class_init 1308,41537
+static gdouble cell_velocity 1317,41801
+static gdouble cell_velocity2 1326,42117
+static void momentum_coarse_fine 1336,42446
+static GfsVariable * massflux 1347,42906
+static void allocate_river 1357,43236
+static void river_init 1402,45122
+GfsSimulationClass * gfs_river_class 1473,47857
+static void traverse_layers 1500,48431
+static gdouble cell_sigma 1517,49159
+static gdouble cell_z 1527,49419
+static void gfs_layers_read 1535,49798
+static void gfs_layers_write 1590,51620
+static void gfs_layers_class_init 1595,51747
+static void gfs_layers_init 1602,51922
+GtsObjectClass * gfs_layers_class 1607,51984
+static void subcritical 1636,52545
+static void bc_subcritical_read 1647,52953
+static void gfs_bc_subcritical_init 1664,53448
+static void gfs_bc_subcritical_class_init 1669,53557
+GfsBcClass * gfs_bc_subcritical_class 1674,53666
+static void discharge_elevation_destroy 1702,54300
+static void discharge_elevation_read 1710,54590
+static void discharge_elevation_write 1736,55452
+static void boundary_flux 1744,55820
+static void traverse_dirichlet_boundaries 1764,56540
+static gboolean discharge_elevation_event 1778,57026
+static void gfs_discharge_elevation_class_init 1835,58859
+static void gfs_discharge_elevation_init 1843,59140
+GfsEventClass * gfs_discharge_elevation_class 1853,59496
+static gboolean read_position 1881,60207
+static void source_pipe_read 1895,60505
+static void source_pipe_write 1923,61373
+#define DQ 1933,61666
+static double flow_rate_Q 1935,61688
+static gboolean source_pipe_event 1945,62007
+static void source_pipe_class_init 2013,64530
+static gdouble source_pipe_value 2020,64764
+static double pipe_flow_rate 2034,65200
+static void source_pipe_init 2050,65921
+GfsSourceGenericClass * gfs_source_pipe_class 2056,66085
+
+event.c,5693
+gdouble gfs_event_next 46,1299
+static gboolean gfs_event_event 73,2054
+static void gfs_event_write 128,3353
+static void event_init 155,4214
+static void gfs_event_read 171,4530
+static void gfs_event_destroy 308,8462
+static void gfs_event_class_init 320,8764
+GfsEventClass * gfs_event_class 329,9027
+GfsEvent * gfs_event_new 351,9538
+void gfs_event_set 377,10064
+void gfs_event_init 410,11028
+void gfs_event_do 443,11800
+void gfs_event_half_do 468,12423
+void gfs_event_redo 484,12856
+static void gfs_generic_init_init 505,13335
+GfsEventClass * gfs_generic_init_class 510,13414
+  GfsVariable * v[v539,14042
+  GfsFunction * f[f540,14076
+  guint n;541,14110
+} VarFunc;542,14121
+static VarFunc * var_func_new 544,14133
+static void var_func_destroy 556,14368
+static void gfs_init_read 564,14516
+static void gfs_init_write 647,16730
+static void gfs_init_destroy 684,17587
+static void init_scalar 695,17841
+static void init_vector 700,17969
+static gboolean gfs_init_event 712,18329
+static void gfs_init_class_init 750,19725
+GfsGenericInitClass * gfs_init_class 758,20001
+static void gfs_init_mask_read 786,20608
+static void gfs_init_mask_write 795,20887
+static void gfs_init_mask_destroy 802,21082
+#define MASKED 809,21290
+static void mask_cells 811,21327
+static void foreach_box 832,21967
+static gboolean gfs_init_mask_event 839,22152
+static void gfs_init_mask_class_init 856,22770
+static void gfs_init_mask 864,23071
+GfsGenericInitClass * gfs_init_mask_class 869,23178
+static void gfs_init_flow_constant_read 894,23807
+static void gfs_init_flow_constant_class_init 905,24180
+GfsEventClass * gfs_init_flow_constant_class 910,24319
+static void gfs_init_vorticity_read 936,24945
+static void gfs_init_vorticity_write 952,25491
+static void gfs_init_vorticity_destroy 964,25855
+static void sum_volume 977,26247
+static void add_ddiv 987,26495
+static void correct_div 999,26813
+static void stream_from_vorticity 1018,27382
+static void init_from_streamfunction 1055,28872
+static void compute_vorticity 1071,29690
+static gboolean gfs_init_vorticity_event 1078,29886
+static void gfs_init_vorticity_class_init 1125,31813
+static void gfs_init_vorticity_init 1133,32077
+GfsGenericInitClass * gfs_init_vorticity_class 1144,32364
+static void gfs_event_sum_destroy 1172,33066
+static void gfs_event_sum_write 1181,33280
+static void gfs_event_sum_read 1191,33532
+static gboolean gfs_event_sum_event 1215,34203
+static void gfs_event_sum_class_init 1235,34835
+static void sum 1243,35130
+static void gfs_event_sum_init 1248,35253
+GfsEventClass * gfs_event_sum_class 1255,35437
+static void gfs_event_sum_direction_write 1283,36042
+static void gfs_event_sum_direction_read 1292,36314
+static gboolean gfs_event_sum_direction_event 1313,36894
+static void gfs_event_sum_direction_class_init 1325,37299
+GfsEventClass * gfs_event_sum_direction_class 1332,37573
+static void gfs_event_harmonic_destroy 1360,38269
+static void gfs_event_harmonic_write 1386,38771
+static void gfs_event_harmonic_read 1405,39411
+static void add_xsin_xcos 1543,43587
+static gdouble de 1557,43923
+static void update_A_B_Z 1575,44402
+static gboolean gfs_event_harmonic_event 1626,45598
+static void gfs_event_harmonic_class_init 1678,47225
+static void gfs_event_harmonic_init 1686,47489
+GfsEventClass * gfs_event_harmonic_class 1691,47622
+static void gfs_event_stop_write 1719,48298
+static void gfs_event_stop_read 1734,48721
+static void gfs_event_stop_destroy 1784,50288
+static void diff 1792,50518
+static void copy 1797,50630
+static gboolean gfs_event_stop_event 1802,50741
+static void gfs_event_stop_class_init 1842,52034
+static void gfs_event_stop_init 1850,52334
+GfsEventClass * gfs_event_stop_class 1855,52417
+static void gfs_event_script_destroy 1883,53065
+static void gfs_event_script_write 1892,53272
+static void gfs_event_script_read 1906,53631
+FILE * gfs_popen 1931,54361
+static gboolean gfs_event_script_event 1966,55394
+static void gfs_event_script_class_init 1988,56030
+GfsEventClass * gfs_event_script_class 1996,56340
+static void gfs_init_fraction_destroy 2024,57000
+static void gfs_init_fraction_read 2034,57262
+static void gfs_init_fraction_write 2061,58062
+static gboolean gfs_init_fraction_event 2071,58378
+static void gfs_init_fraction_class_init 2083,58752
+static void gfs_init_fraction_init 2091,59074
+GfsInitFractionClass * gfs_init_fraction_class 2096,59241
+static void gfs_remove_droplets_destroy 2124,59943
+static void compute_v 2132,60210
+static gboolean gfs_remove_droplets_event 2137,60338
+static void gfs_remove_droplets_read 2160,61216
+static void gfs_remove_droplets_write 2197,62361
+static void gfs_remove_droplets_class_init 2211,62809
+GfsEventClass * gfs_remove_droplets_class 2219,63134
+static gboolean gfs_remove_ponds_event 2247,63794
+static void gfs_remove_ponds_read 2258,64163
+static void gfs_remove_ponds_write 2274,64618
+static void gfs_remove_ponds_class_init 2281,64891
+GfsEventClass * gfs_remove_ponds_class 2288,65137
+static void filter 2316,65786
+static void filtered 2336,66508
+static gboolean gfs_event_filter_event 2343,66743
+static void gfs_event_filter_read 2361,67403
+static void gfs_event_filter_write 2392,68310
+static void gfs_event_filter_class_init 2400,68626
+GfsEventClass * gfs_event_filter_class 2407,68872
+static gboolean gfs_event_list_event 2435,69494
+static void copy_event 2446,69838
+static void gfs_event_list_read 2451,70002
+static void gfs_event_list_write 2513,71818
+static void gfs_event_list_destroy 2530,72276
+static void gfs_event_list_class_init 2539,72583
+static void gfs_event_list_init 2547,72883
+GfsEventClass * gfs_event_list_class 2553,73050
+
+adaptive.h,1891
+#define __ADAPTIVE_H__21,856
+typedef struct _GfsAdapt         GfsAdapt;40,1392
+struct _GfsAdapt 42,1436
+  GfsEvent parent;44,1473
+  gboolean active;45,1492
+  GfsFunction * minlevel,48,1529
+  GfsFunction * minlevel, * maxlevel;48,1529
+  guint mincells,49,1567
+  guint mincells, maxcells;49,1567
+  gdouble cmax,50,1595
+  gdouble cmax, weight,50,1595
+  gdouble cmax, weight, cfactor;50,1595
+  GfsVariable * c;51,1628
+  GtsKeyFunc cost;52,1647
+#define GFS_ADAPT(55,1670
+#define GFS_IS_ADAPT(58,1786
+typedef struct _GfsAdaptVorticity         GfsAdaptVorticity;65,1957
+struct _GfsAdaptVorticity 67,2019
+  GfsAdapt parent;69,2065
+  GfsVariable ** u;70,2084
+  gdouble maxa;71,2104
+#define GFS_ADAPT_VORTICITY(76,2142
+#define GFS_IS_ADAPT_VORTICITY(79,2287
+#define GFS_IS_ADAPT_STREAMLINE_CURVATURE(86,2499
+typedef struct _GfsAdaptFunction         GfsAdaptFunction;93,2733
+struct _GfsAdaptFunction 95,2793
+  GfsAdapt parent;97,2838
+  GfsFunction * f;100,2875
+#define GFS_ADAPT_FUNCTION(103,2898
+#define GFS_IS_ADAPT_FUNCTION(106,3040
+typedef struct _GfsAdaptGradient         GfsAdaptGradient;113,3237
+struct _GfsAdaptGradient 115,3297
+  GfsAdaptFunction parent;117,3342
+  gdouble dimension;118,3369
+  GfsVariable * v;121,3408
+#define GFS_ADAPT_GRADIENT(124,3431
+#define GFS_IS_ADAPT_GRADIENT(127,3573
+typedef struct _GfsAdaptError         GfsAdaptError;134,3767
+struct _GfsAdaptError 136,3821
+  GfsAdaptGradient parent;138,3863
+  GfsVariable * dv[dv139,3890
+  FttComponent c;140,3925
+  GfsVariable * v;143,3961
+#define GFS_ADAPT_ERROR(146,3984
+#define GFS_IS_ADAPT_ERROR(149,4117
+typedef struct _GfsAdaptThickness         GfsAdaptThickness;156,4306
+struct _GfsAdaptThickness 158,4368
+  GfsAdapt parent;160,4414
+  GfsVariable * v,163,4451
+  GfsVariable * v, * c;163,4451
+#define GFS_ADAPT_THICKNESS(166,4479
+#define GFS_IS_ADAPT_THICKNESS(169,4624
+
+domain.c,10268
+static void locate_index 43,1212
+static void root_bounds 50,1399
+static void box_bounds 61,1709
+static gint locate_linear_index 70,1964
+static void box_index 82,2250
+GfsLocateArray * gfs_locate_array_new 109,2988
+GSList * gfs_locate_array_locate 139,3838
+void gfs_locate_array_destroy 152,4145
+static void domain_write 168,4388
+static void domain_read 211,5711
+static void box_set_pos 295,8155
+static void set_ref_pos 343,9372
+static void pid_max 349,9492
+  GSList * removed;356,9604
+  gint pid;357,9624
+} RemovedData;358,9636
+static void removed_list 360,9652
+static void mpi_links 384,10462
+static void add_id 406,11066
+static GPtrArray * box_ids 413,11235
+static void convert_boundary_mpi_into_edges 420,11415
+static void domain_post_read 466,12799
+static void free_pair 520,14664
+static void cleanup_each_box 526,14756
+static void domain_destroy 541,15355
+static void add_item 581,16386
+static int compare_boxes 586,16472
+static void domain_foreach 597,16770
+static void domain_add 619,17467
+static void domain_remove 625,17658
+static void domain_class_init 631,17855
+static void domain_init 644,18269
+GfsDomainClass * gfs_domain_class 694,19443
+  FttTraverseFlags flags;716,19960
+  gint max_depth;717,19986
+  GfsVariable * v,718,20004
+  GfsVariable * v, * v1;718,20004
+  FttComponent c;719,20029
+  GfsLinearProblem * lp;720,20047
+} BcData;721,20072
+static void box_bc 723,20083
+static void direction_face_bc 746,20629
+static void box_face_bc 765,21123
+static void box_receive_bc 779,21446
+static void box_match 799,22090
+static void box_synchronize 819,22652
+void gfs_domain_copy_bc 846,23450
+void gfs_domain_bc 878,24341
+static void box_homogeneous_bc 889,24586
+static void box_homogeneous_bc_stencil 911,25129
+void gfs_domain_homogeneous_bc 945,26125
+void gfs_domain_homogeneous_bc_stencil 980,27221
+  FttCellTraverseFunc func;996,27644
+  gpointer data;997,27672
+  FttTraverseType order;998,27689
+  FttTraverseFlags flags;999,27714
+  gint max_depth;1000,27740
+} TraverseData;1001,27758
+  TraverseData t;1004,27792
+  BcData b;1005,27810
+} TraverseBcData;1006,27822
+static void update_mpi_cell 1008,27841
+static void update_other_cell 1016,28024
+static void update_mpi_boundaries 1024,28211
+static void update_other_homogeneous_boundaries 1048,28903
+void gfs_traverse_and_homogeneous_bc 1093,30411
+static void update_other_boundaries 1127,31722
+void gfs_traverse_and_bc 1172,33154
+void gfs_domain_face_bc 1213,34560
+static void box_changed 1234,35229
+static void refine_cell_corner 1243,35454
+static void box_depth 1249,35664
+static gboolean domain_match 1257,35796
+void gfs_domain_match 1284,36739
+void gfs_domain_forget_boundary 1305,37207
+static void dirichlet_bc 1320,37595
+static void neumann_bc 1326,37715
+static gboolean is_velocity 1332,37834
+void gfs_domain_surface_bc 1350,38221
+static void box_traverse 1368,38877
+void gfs_domain_cell_traverse 1388,39583
+static void cell_traverse_add 1403,40005
+FttCellTraverse * gfs_domain_cell_traverse_new 1420,40510
+void gfs_domain_traverse_layers 1449,41437
+static void box_traverse_box 1462,41764
+void gfs_domain_cell_traverse_box 1491,42773
+static void box_traverse_condition 1516,43337
+void gfs_domain_cell_traverse_condition 1550,44540
+static void traverse_mixed 1576,45190
+void gfs_domain_traverse_mixed 1592,45687
+  FttCellTraverseCutFunc func;1607,46072
+  gpointer data;1608,46103
+  FttTraverseType order;1609,46120
+  FttTraverseFlags flags;1610,46145
+  GfsGenericSurface * s;1611,46171
+} TraverseCut;1612,46196
+static void traverse_cut 1614,46212
+void gfs_domain_traverse_cut 1631,46741
+static void traverse_cut_2D 1647,47190
+void gfs_domain_traverse_cut_2D 1666,47778
+guint gfs_domain_depth 1690,48444
+void gfs_domain_face_traverse 1725,49592
+static void cell_traverse_boundary 1795,51667
+void gfs_domain_cell_traverse_boundary 1827,52750
+static void add_stats 1851,53316
+static void range_reduce 1861,53537
+static void domain_range_reduce 1878,53938
+static void domain_range_reduce 1895,54477
+GtsRange gfs_domain_stats_variable 1919,55194
+static void add_stats_solid 1948,55956
+GtsRange gfs_domain_stats_solid 1962,56391
+static void add_stats_merged 1977,56729
+void gfs_domain_stats_merged 2010,57626
+static void cell_count 2032,58189
+#define BPID(2037,58263
+static void box_count 2039,58342
+static void boundary_size 2049,58645
+void gfs_domain_stats_balance 2074,59605
+static void add_norm 2116,60860
+static void add_norm_weighted 2124,61057
+static void norm_reduce 2135,61334
+static void domain_norm_reduce 2151,61721
+static void domain_norm_reduce 2168,62258
+GfsNorm gfs_domain_norm_variable 2195,63118
+  GfsVariable * res;2234,64135
+  gdouble bias;2235,64156
+  GfsNorm n;2236,64172
+} ResData;2237,64185
+static void add_norm_residual 2239,64197
+GfsNorm gfs_domain_norm_residual 2264,65139
+GfsVariable ** gfs_domain_velocity 2296,65920
+static void add_norm_velocity 2312,66305
+GfsNorm gfs_domain_norm_velocity 2331,66903
+GfsDomain * gfs_domain_read 2362,67686
+  GSList * boxlist;2381,68088
+  guint bid;2382,68108
+  gboolean one_box_per_pe;2383,68121
+  gint pid;2384,68148
+  GfsVariable * newboxp;2385,68160
+  GfsDomain * domain;2386,68185
+} SplitPar;2387,68207
+static void box_split 2389,68220
+static GtsGEdge * node_is_linked 2450,70245
+static void box_link 2462,70530
+static void box_destroy 2534,72906
+static void get_ref_pos 2559,73574
+void gfs_domain_split 2576,74075
+FttCell * gfs_domain_locate 2623,75704
+FttCell * gfs_domain_boundary_locate 2656,76762
+static void box_distance2 2686,77550
+static void bubble_sort 2691,77639
+gdouble gfs_domain_cell_point_distance2 2721,78461
+void gfs_domain_advect_point 2764,79689
+static void count 2790,80344
+guint gfs_domain_size 2804,80645
+  gdouble cfl;2819,81006
+  GfsVariable ** v;2820,81021
+  GfsDomain * domain;2821,81041
+} CflData;2822,81063
+static void minimum_mac_cfl 2824,81075
+static void minimum_cfl 2857,81989
+gdouble gfs_domain_cfl 2906,83290
+void gfs_cell_init 2932,84028
+void gfs_cell_reinit 2963,84848
+void gfs_cell_fine_init 2979,85243
+void gfs_cell_copy 3020,86287
+void gfs_cell_write 3064,87345
+void gfs_cell_read 3099,88255
+void gfs_cell_write_binary 3176,90302
+void gfs_cell_read_binary 3212,91336
+static void box_realloc 3271,93049
+guint gfs_domain_alloc 3291,93642
+void gfs_domain_free 3314,94302
+GfsVariable * gfs_domain_add_variable 3334,94877
+GfsVariable * gfs_domain_get_or_add_variable 3361,95731
+  gdouble * f,3384,96288
+  gdouble * f, * m;3384,96288
+  GfsVariable * v;3385,96308
+  GfsFunction * weight;3386,96327
+  GfsSourceDiffusion * d;3387,96351
+} Force;3388,96377
+static void add_pressure_force 3390,96387
+static GfsSourceDiffusion * source_diffusion 3408,96839
+static void add_viscous_force 3424,97161
+void gfs_domain_solid_force 3502,99170
+#define THRESHOLD 3564,100961
+static void tag_cell_fraction 3566,100985
+  GfsVariable * v,3599,101870
+  GfsVariable * v, * c;3599,101870
+  FttDirection d;3600,101894
+  guint * touch,3601,101912
+  guint * touch, * tags,3601,101912
+  guint * touch, * tags, tag,3601,101912
+  guint * touch, * tags, tag, tagshift;3601,101912
+} TagPar;3602,101952
+static void tag_new_fraction_region 3604,101963
+static void touching_regions 3620,102516
+static void reduce_touching_regions 3642,102926
+static void shift_tags 3653,103205
+static void unify_tag_range 3660,103362
+static void match_periodic_bc 3687,104175
+static void match_box_bc 3698,104464
+static void fix_touching 3706,104765
+guint gfs_domain_tag_droplets 3725,105319
+  GfsVariable * tag,3796,107442
+  GfsVariable * tag, * c;3796,107442
+  guint * sizes;3797,107468
+  guint n,3798,107485
+  guint n, min;3798,107485
+  gdouble val;3799,107501
+} RemoveDropletsPar;3800,107516
+static void compute_droplet_size 3802,107538
+static void reset_small_fraction 3809,107690
+static int greater 3816,107884
+void gfs_domain_remove_droplets 3833,108402
+static void tag_cell 3879,109747
+static void tag_new_region 3912,110703
+static gboolean remove_small 3930,111164
+static void remove_small_box 3969,112308
+void gfs_domain_remove_ponds 3991,112920
+static gboolean tag_speck 4037,114218
+static void fill_speck 4080,115330
+void gfs_domain_remove_specks 4101,115840
+void gfs_domain_timer_start 4134,116849
+void gfs_domain_timer_stop 4161,117546
+static void cell_combine_traverse 4180,118044
+static void box_combine_traverse 4211,118830
+void gfs_domain_combine_traverse 4243,119882
+GfsDerivedVariable * gfs_domain_add_derived_variable 4276,120743
+gboolean gfs_domain_remove_derived_variable 4306,121787
+  FttDirection d;4329,122342
+  GfsFunction * f;4330,122360
+  GfsVariable * v;4331,122379
+} SumData;4332,122398
+static gdouble product 4334,122410
+static void sum 4340,122610
+void gfs_domain_sum 4370,123520
+static void filter 4388,124022
+void gfs_domain_filter 4421,125059
+struct _GfsRequest 4440,125649
+  void * buf;4441,125670
+  MPI_Request request[request4443,125700
+GfsRequest * gfs_send_objects 4461,126179
+void gfs_wait 4497,127137
+GSList * gfs_receive_objects 4521,127615
+static void unlink_box 4558,128846
+static void setup_binary_IO 4589,130239
+GfsRequest * gfs_send_boxes 4614,130930
+GSList * gfs_receive_boxes 4637,131598
+GtsObject * gfs_object_from_name 4666,132423
+static void gfs_domain_projection_destroy 4681,132784
+static void gfs_domain_projection_class_init 4689,133059
+GfsDomainClass * gfs_domain_projection_class 4694,133202
+  GfsDomainProjection * proj;4715,133730
+  FttCell * cell;4716,133760
+  GfsVariable * maxlevel;4717,133778
+} ProjData;4718,133804
+static gboolean overlap 4720,133817
+static void update_maxlevel 4740,134345
+static void project_refine 4747,134496
+static gboolean finer 4767,135244
+static void project_coarsen_box 4774,135442
+void gfs_domain_projection_reshape 4787,135752
+GfsDomainProjection * gfs_domain_projection_new 4808,136485
+  GfsDomainProjection * proj;4847,137786
+  FttCell * cell;4848,137816
+  GfsProjectionTraverseFunc func;4849,137834
+  gpointer data;4850,137868
+} ProjectionTraverse;4851,137885
+static void apply_func 4853,137908
+static void traverse_overlapping 4858,138017
+void gfs_domain_projection_traverse 4882,138915
+
+river.h,2124
+#define __RIVER_H__21,858
+typedef struct _GfsLayers         GfsLayers;32,1003
+struct _GfsLayers 34,1049
+  GfsRefine parent;36,1087
+  int nl;39,1125
+#define GFS_LAYERS(42,1139
+#define GFS_IS_LAYERS(45,1258
+typedef struct _GfsRiver GfsRiver;52,1424
+struct _GfsRiver 54,1460
+  GfsSimulation parent;56,1497
+  gdouble * uL,57,1521
+  gdouble * uL, * uR,57,1521
+  gdouble * uL, * uR, * f,57,1521
+  gdouble * uL, * uR, * f, cfl;57,1521
+  GfsVariable ** v,60,1571
+  GfsVariable ** v, ** v1,60,1571
+  GfsVariable ** v, ** v1, * zb,60,1571
+  GfsVariable ** v, ** v1, * zb, * h,60,1571
+  GfsVariable ** v, ** v1, * zb, * h, * qx,60,1571
+  GfsVariable ** v, ** v1, * zb, * h, * qx, * qy;60,1571
+  GfsVariable ** dv[dv61,1621
+  GfsVariable ** flux,62,1657
+  GfsVariable ** flux, ** massflux;62,1657
+  gdouble * dz;63,1693
+  int l,64,1709
+  int l, nlayers,64,1709
+  int l, nlayers, nvar,64,1709
+  int l, nlayers, nvar, nt;64,1709
+  gdouble g,65,1737
+  gdouble g, dt;65,1737
+  GfsCenterGradient gradient;66,1754
+  guint time_order;67,1784
+  gdouble dry;68,1804
+  void (* scheme)69,1819
+  GfsFunction * nu,72,1923
+  GfsFunction * nu, * dut,72,1923
+  GfsFunction * nu, * dut, * k;72,1923
+  gboolean variable_density;73,1955
+#define GFS_RIVER(76,1988
+#define GFS_IS_RIVER(79,2108
+#define GFS_IS_BC_SUBCRITICAL(86,2291
+typedef struct _GfsDischargeElevation GfsDischargeElevation;92,2489
+struct _GfsDischargeElevation 94,2551
+  GfsConstant parent;96,2601
+  GfsVariable * P;97,2623
+  gdouble flow;98,2642
+  GfsFunction * Q,101,2676
+  GfsFunction * Q, * profile;101,2676
+  gdouble tolerance;102,2706
+#define GFS_DISCHARGE_ELEVATION(105,2731
+#define GFS_IS_DISCHARGE_ELEVATION(108,2892
+typedef struct _GfsSourcePipe         GfsSourcePipe;115,3102
+struct _GfsSourcePipe 117,3156
+  GfsSourceGeneric parent;119,3198
+  FttCell * scell,120,3225
+  FttCell * scell, * ecell;120,3225
+  gdouble Q;121,3253
+  double (* flow_rate)124,3284
+  FttVector start,129,3573
+  FttVector start, end;129,3573
+  gdouble diameter;130,3597
+#define GFS_SOURCE_PIPE(133,3621
+#define GFS_IS_SOURCE_PIPE(136,3754
+
+event.h,5667
+#define __EVENT_H__21,853
+typedef struct _GfsEvent                GfsEvent;29,950
+typedef struct _GfsEventClass           GfsEventClass;30,1000
+struct _GfsEvent 32,1056
+  GtsSListContainee parent;33,1075
+  gdouble t,35,1104
+  gdouble t, start,35,1104
+  gdouble t, start, end,35,1104
+  gdouble t, start, end, step;35,1104
+  guint i,36,1135
+  guint i, istart,36,1135
+  guint i, istart, iend,36,1135
+  guint i, istart, iend, istep;36,1135
+  guint n;38,1170
+  gboolean end_event,39,1181
+  gboolean end_event, realised,39,1181
+  gboolean end_event, realised, redo;39,1181
+  gchar * name;40,1219
+typedef struct _GfsSimulation           GfsSimulation;43,1239
+struct _GfsEventClass 45,1295
+  GtsSListContaineeClass parent_class;46,1319
+  gboolean (* event)48,1359
+  void     (* post_event)49,1426
+  void     (* event_half)50,1493
+#define GFS_EVENT(55,1589
+#define GFS_EVENT_CLASS(58,1709
+#define GFS_IS_EVENT(61,1827
+#define         gfs_event_is_repetitive(83,2691
+typedef struct _GfsEvent      GfsGenericInit;87,2816
+typedef struct _GfsEventClass GfsGenericInitClass;88,2862
+#define GFS_IS_GENERIC_INIT(90,2914
+typedef struct _GfsInit         GfsInit;97,3103
+struct _GfsInit 99,3145
+  GfsGenericInit parent;101,3181
+  GSList * f;102,3206
+#define GFS_INIT(105,3224
+#define GFS_IS_INIT(108,3337
+typedef struct _GfsInitMask         GfsInitMask;115,3505
+struct _GfsInitMask 117,3555
+  GfsGenericInit parent;119,3595
+  GSList * masked_boxes;120,3620
+  GfsFunction * mask;123,3663
+#define GFS_INIT_MASK(126,3689
+#define GFS_IS_INIT_MASK(129,3816
+typedef struct _GfsInitVorticity         GfsInitVorticity;140,4094
+struct _GfsInitVorticity 142,4154
+  GfsGenericInit parent;144,4199
+  GfsVariable * vort,145,4224
+  GfsVariable * vort, ** u;145,4224
+  GfsVariable * stream;147,4263
+  GfsVariable * stream[stream149,4293
+  GfsFunction * f;153,4345
+  GfsFunction * fv[fv155,4376
+#define GFS_INIT_VORTICITY(159,4410
+#define GFS_IS_INIT_VORTICITY(162,4552
+typedef struct _GfsEventSum         GfsEventSum;169,4750
+struct _GfsEventSum 171,4800
+  GfsEvent parent;172,4822
+  GfsFunction * v;174,4842
+  GfsVariable * sv;175,4861
+  FttCellTraverseFunc sum;176,4881
+  gdouble last,177,4908
+  gdouble last, dt;177,4908
+#define GFS_EVENT_SUM(180,4932
+#define GFS_IS_EVENT_SUM(183,5059
+typedef struct _GfsEventSumDirection         GfsEventSumDirection;190,5245
+struct _GfsEventSumDirection 192,5313
+  GfsEventSum parent;193,5344
+  FttDirection d;195,5367
+#define GFS_EVENT_SUM_DIRECTION(198,5389
+#define GFS_IS_EVENT_SUM_DIRECTION(201,5545
+typedef struct _GfsEventHarmonic         GfsEventHarmonic;208,5757
+struct _GfsEventHarmonic 210,5817
+  GfsEvent parent;211,5844
+  GArray * omega;213,5864
+  GfsVariable * v,214,5882
+  GfsVariable * v, * z,214,5882
+  GfsVariable * v, * z, * e,214,5882
+  GfsVariable * v, * z, * e, ** A,214,5882
+  GfsVariable * v, * z, * e, ** A, ** B;214,5882
+  gdouble * vsin,215,5923
+  gdouble * vsin, * vcos,215,5923
+  gdouble * vsin, * vcos, ** M,215,5923
+  gdouble * vsin, * vcos, ** M, ** iM,215,5923
+  gdouble * vsin, * vcos, ** M, ** iM, ** Mn,215,5923
+  gdouble * vsin, * vcos, ** M, ** iM, ** Mn, * x,215,5923
+  gdouble * vsin, * vcos, ** M, ** iM, ** Mn, * x, * a;215,5923
+  gchar * Aname,216,5979
+  gchar * Aname, * Bname;216,5979
+  gboolean invertible;217,6005
+#define GFS_EVENT_HARMONIC(220,6032
+#define GFS_IS_EVENT_HARMONIC(223,6174
+typedef struct _GfsEventStop         GfsEventStop;230,6367
+struct _GfsEventStop 232,6419
+  GfsEvent parent;233,6442
+  GfsVariable * v,235,6462
+  GfsVariable * v, * oldv,235,6462
+  GfsVariable * v, * oldv, * diff;235,6462
+  gdouble last,236,6497
+  gdouble last, max;236,6497
+  gboolean relative;237,6518
+#define GFS_EVENT_STOP(240,6543
+#define GFS_IS_EVENT_STOP(243,6673
+typedef struct _GfsEventScript         GfsEventScript;254,6948
+struct _GfsEventScript 256,7004
+  GfsEvent parent;257,7029
+  gchar * script;259,7049
+#define GFS_EVENT_SCRIPT(262,7071
+#define GFS_IS_EVENT_SCRIPT(265,7207
+#define GFS_EVENT_SCRIPT_STOP 267,7316
+typedef struct _GfsInitFraction         GfsInitFraction;273,7441
+struct _GfsInitFraction 275,7499
+  GfsGenericInit parent;277,7543
+  GfsVariable * c;279,7569
+  GfsGenericSurface * surface;280,7588
+typedef struct _GfsInitFractionClass    GfsInitFractionClass;283,7623
+struct _GfsInitFractionClass 285,7686
+  GfsGenericInitClass parent_class;287,7735
+#define GFS_INIT_FRACTION(292,7793
+#define GFS_INIT_FRACTION_CLASS(295,7932
+#define GFS_IS_INIT_FRACTION(298,8069
+typedef struct _GfsRemoveDroplets         GfsRemoveDroplets;305,8271
+struct _GfsRemoveDroplets 307,8333
+  GfsEvent parent;309,8379
+  GfsVariable * v;310,8398
+  GfsFunction * fc;313,8435
+  GfsVariable * c;314,8455
+  gint min;315,8474
+  gdouble val;316,8486
+#define GFS_REMOVE_DROPLETS(319,8505
+#define GFS_IS_REMOVE_DROPLETS(322,8650
+typedef struct _GfsRemovePonds         GfsRemovePonds;329,8848
+struct _GfsRemovePonds 331,8904
+  GfsGenericInit parent;333,8947
+  gint min;336,8990
+#define GFS_REMOVE_PONDS(339,9006
+#define GFS_IS_REMOVE_PONDS(342,9142
+typedef struct _GfsEventFilter         GfsEventFilter;349,9331
+struct _GfsEventFilter 351,9387
+  GfsEvent parent;353,9430
+  GfsVariable * tmp;354,9449
+  GfsVariable * v;357,9488
+  gdouble scale;358,9507
+#define GFS_EVENT_FILTER(361,9528
+#define GFS_IS_EVENT_FILTER(364,9664
+typedef struct _GfsEventList         GfsEventList;371,9851
+struct _GfsEventList 373,9903
+  GfsEvent parent;375,9944
+  GtsObjectClass * klass;378,9981
+  GtsSListContainer * list;379,10007
+#define GFS_EVENT_LIST(382,10039
+#define GFS_IS_EVENT_LIST(385,10169
+
+spatial.h,342
+#define __SPATIAL_H__21,855
+#define intersection(27,1009
+#define union(28,1045
+#define difference(29,1081
+#define X 31,1121
+#define Y 32,1134
+#define Z 33,1147
+#define rx 34,1160
+#define ry 35,1174
+#define rz 36,1188
+static double _x 38,1203
+static double ellipse 40,1245
+static double sphere 46,1433
+static double cube 51,1583
+
+domain.h,3034
+#define __DOMAIN_H__21,854
+  GSList ** root;33,1025
+  gdouble h,34,1043
+  gdouble h, min[min34,1043
+  gdouble h, min[FTT_DIMENSION], max[max34,1043
+  gint n[n35,1096
+  gint n[FTT_DIMENSION], size;35,1096
+} GfsLocateArray;36,1127
+typedef struct _GfsDomainClass     GfsDomainClass;45,1388
+typedef struct _GfsDiffusion       GfsDiffusion;46,1439
+typedef struct _GfsSourceDiffusion GfsSourceDiffusion;47,1488
+typedef struct _GfsTimer           GfsTimer;48,1543
+struct _GfsTimer 50,1589
+  GtsRange r;51,1608
+  gdouble start;52,1622
+struct _GfsDomain 55,1643
+  GtsWGraph parent;56,1663
+  int pid;58,1684
+  GfsClock * timer;59,1695
+  GHashTable * timers;60,1715
+  GtsRange timestep;62,1739
+  GtsRange size;63,1760
+  gboolean profile_bc;65,1778
+  GtsRange mpi_messages;67,1802
+  GtsRange mpi_wait;68,1827
+  guint rootlevel;70,1849
+  FttVector refpos;71,1868
+  FttVector lambda;72,1888
+  GArray * allocated;74,1909
+  GSList * variables;75,1931
+  GSList * derived_variables;76,1953
+  GfsVariable * velocity[velocity78,1984
+  GSList * variables_io;80,2026
+  gboolean binary;81,2051
+  gint max_depth_write;82,2070
+  FttCellInitFunc cell_init;84,2095
+  gpointer cell_init_data;85,2124
+  gint version;87,2152
+  gpointer array;89,2169
+  gboolean overlap;91,2188
+  gpointer metric_data;94,2297
+  gdouble (* face_metric)95,2321
+  gdouble (* cell_metric)96,2395
+  void    (* solid_metric)97,2465
+  gdouble (* scale_metric)98,2548
+  gdouble (* face_scale_metric)99,2632
+  gdouble (* viscous_metric_implicit)100,2720
+  gdouble (* viscous_metric_explicit)103,2844
+  void    (* advection_metric)107,2986
+  GHashTable * objects;113,3177
+  int np;116,3245
+  GTimer * clock;119,3274
+  GPtrArray * sorted;121,3293
+  gboolean dirty;122,3345
+  GSList * projections;124,3416
+  gboolean has_rotated_bc;126,3505
+  void (* traverse_layers)128,3581
+struct _GfsDomainClass 131,3658
+  GtsWGraphClass parent_class;132,3683
+  void    (* post_read)134,3715
+#define GFS_DOMAIN(137,3772
+#define GFS_DOMAIN_CLASS(140,3895
+#define GFS_IS_DOMAIN(143,4016
+#define gfs_domain_variables_number(146,4116
+#define gfs_domain_variables_size(147,4181
+#define gfs_domain_traverse_leaves(157,4595
+void      (* FttCellCombineTraverseFunc)368,13240
+  gchar * name,379,13627
+  gchar * name, * description;379,13627
+  gpointer func,380,13658
+  gpointer func, data;380,13658
+} GfsDerivedVariableInfo;381,13681
+typedef struct _GfsRequest GfsRequest;394,14189
+gdouble gfs_domain_face_fraction 415,14868
+gdouble gfs_domain_face_fraction_right 432,15313
+gdouble gfs_domain_cell_fraction 453,15856
+void gfs_domain_solid_metric 471,16355
+gdouble gfs_domain_face_scale_metric 487,16756
+gdouble gfs_cell_volume 504,17121
+typedef struct _GfsDomainProjection GfsDomainProjection;515,17494
+struct _GfsDomainProjection 517,17552
+  GfsDomain parent;519,17600
+  GfsDomain * domain;522,17640
+  FttComponent c;523,17662
+#define GFS_DOMAIN_PROJECTION(526,17684
+typedef void       (* GfsProjectionTraverseFunc)534,18087
+
+gfs.h,25
+#define __GFS_H__21,851
+
+levelset.c,535
+static void variable_distance_read 32,1028
+static void variable_distance_write 67,2060
+static gdouble vof_distance2 76,2352
+static void distance_for_stencil 88,2667
+static void distance 106,3183
+static void stencil_interpolate 117,3536
+static void stencil_gradient 126,3754
+static void variable_distance_event_half 137,4021
+static gboolean variable_distance_event 180,5939
+static void variable_distance_class_init 193,6347
+static void variable_distance_init 201,6630
+GfsVariableClass * gfs_variable_distance_class 206,6705
+
+output.c,8090
+static void output_free 43,1231
+static void gfs_output_destroy 52,1423
+static gboolean gfs_output_event 64,1695
+static void gfs_output_post_event 126,3437
+static void gfs_output_write 133,3610
+static void gfs_output_read 143,3850
+static void gfs_output_class_init 214,5769
+static void gfs_output_init 224,6114
+GfsOutputClass * gfs_output_class 234,6326
+void gfs_output_mute 263,7040
+static GHashTable * gfs_output_files 273,7272
+GfsOutputFile * gfs_output_file_new 281,7419
+GfsOutputFile * gfs_output_file_open 302,7989
+void gfs_output_file_close 346,9156
+static gboolean time_event 370,9611
+static void gfs_output_time_class_init 394,10312
+GfsOutputClass * gfs_output_time_class 399,10409
+static gboolean progress_event 427,11011
+static void gfs_output_progress_class_init 453,11890
+GfsOutputClass * gfs_output_progress_class 458,11995
+static gboolean projection_stats_event 486,12629
+static void gfs_output_projection_stats_class_init 502,13185
+GfsOutputClass * gfs_output_projection_stats_class 507,13306
+static gboolean diffusion_stats_event 535,13984
+static void gfs_output_diffusion_stats_class_init 568,14825
+GfsOutputClass * gfs_output_diffusion_stats_class 573,14944
+static gboolean gfs_output_solid_stats_event 601,15613
+static void gfs_output_solid_stats_class_init 627,16614
+GfsOutputClass * gfs_output_solid_stats_class 632,16755
+static gboolean gfs_output_adapt_stats_event 660,17438
+static void gfs_output_adapt_stats_class_init 694,18656
+GfsOutputClass * gfs_output_adapt_stats_class 699,18797
+  GfsTimer * t;728,19454
+  gchar * name;729,19470
+} Timer;730,19486
+static int compare_timer 732,19496
+static void get_timer 739,19665
+static void print_timing 748,19860
+static gboolean timing_event 772,20661
+static void gfs_output_timing_class_init 810,21884
+GfsOutputClass * gfs_output_timing_class 815,21985
+static gboolean gfs_output_balance_event 843,22634
+static void gfs_output_balance_class_init 872,23682
+GfsOutputClass * gfs_output_balance_class 877,23815
+static void gfs_output_solid_force_destroy 905,24489
+static void gfs_output_solid_force_read 913,24775
+static void gfs_output_solid_force_write 928,25217
+static gboolean gfs_output_solid_force_event 936,25490
+static void gfs_output_solid_force_class_init 963,26495
+GfsOutputClass * gfs_output_solid_force_class 971,26836
+static gchar default_precision[default_precision999,27544
+static void gfs_output_location_destroy 1001,27586
+static gboolean vector_read 1012,27914
+static void gfs_output_location_read 1037,28561
+static void gfs_output_location_write 1125,30760
+static gboolean gfs_output_location_event 1153,31606
+static void gfs_output_location_class_init 1214,33536
+static void gfs_output_location_init 1222,33862
+GfsOutputClass * gfs_output_location_class 1229,34066
+static gboolean gfs_output_particle_event 1257,34751
+static void gfs_output_particle_class_init 1286,35646
+GfsOutputClass * gfs_output_particle_class 1291,35781
+static void output_simulation_destroy 1319,36456
+static void write_text 1330,36784
+static gboolean output_simulation_event 1354,37548
+static void output_simulation_write 1452,40399
+static void output_simulation_read 1485,41409
+static void gfs_output_simulation_class_init 1561,43483
+static void gfs_output_simulation_init 1569,43784
+GfsOutputClass * gfs_output_simulation_class 1579,44015
+static gboolean output_boundaries_event 1607,44687
+static void gfs_output_boundaries_class_init 1621,45110
+GfsOutputClass * gfs_output_boundaries_class 1626,45226
+static void gfs_output_scalar_destroy 1654,45895
+static void gfs_output_scalar_read 1670,46361
+static void gfs_output_scalar_write 1813,50425
+static void update_v 1841,51253
+static gboolean cell_condition 1846,51392
+static void output_scalar_traverse 1851,51512
+static gboolean gfs_output_scalar_event 1869,52062
+static void gfs_output_scalar_post_event 1906,53398
+static void gfs_output_scalar_class_init 1919,53798
+static void gfs_output_scalar_init 1928,54184
+GfsOutputClass * gfs_output_scalar_class 1938,54452
+static gboolean gfs_output_scalar_norm_event 1966,55131
+static void gfs_output_scalar_norm_class_init 1988,55898
+GfsOutputClass * gfs_output_scalar_norm_class 1993,56039
+static gboolean gfs_output_scalar_stats_event 2021,56745
+static void gfs_output_scalar_stats_class_init 2050,57736
+GfsOutputClass * gfs_output_scalar_stats_class 2055,57879
+  GfsVariable * v;2084,58595
+  GfsFunction * w;2085,58614
+  gdouble sum;2086,58633
+} SumData;2087,58648
+static void add 2089,58660
+static gboolean gfs_output_scalar_sum_event 2095,58846
+static void gfs_output_scalar_sum_class_init 2125,59853
+GfsOutputClass * gfs_output_scalar_sum_class 2130,59992
+static void gfs_output_scalar_maxima_destroy 2158,60645
+static void gfs_output_scalar_maxima_read 2168,60886
+static void gfs_output_scalar_maxima_write 2189,61405
+static void maxima 2195,61625
+static gboolean gfs_output_scalar_maxima_event 2214,62045
+static void gfs_output_scalar_maxima_class_init 2242,62919
+GfsOutputClass * gfs_output_scalar_maxima_class 2250,63270
+static void gfs_output_scalar_histogram_destroy 2278,63972
+static void gfs_output_scalar_histogram_read 2294,64414
+static void gfs_output_scalar_histogram_write 2377,66720
+static void update_histogram 2395,67203
+static gboolean gfs_output_scalar_histogram_event 2417,67736
+static void gfs_output_scalar_histogram_class_init 2465,69306
+static void gfs_output_scalar_histogram_init 2473,69672
+GfsOutputClass * gfs_output_scalar_histogram_class 2483,69948
+static void gfs_output_droplet_sums_destroy 2511,70706
+static void gfs_output_droplet_sums_read 2521,71033
+static void gfs_output_droplet_sums_write 2542,71705
+  double v,2554,72030
+  double v, f;2554,72030
+} VolumePair;2555,72045
+  GfsVariable * s,2558,72077
+  GfsVariable * s, * c,2558,72077
+  GfsVariable * s, * c, * tag;2558,72077
+  VolumePair * v;2559,72108
+  guint n;2560,72126
+  GfsFunction * fc;2561,72137
+} DropSumsPar;2562,72157
+static void droplet_sums 2564,72173
+static void compute_c 2573,72407
+static int volume_sort 2578,72529
+static gboolean gfs_output_droplet_sums_event 2585,72699
+static void gfs_output_droplet_sums_class_init 2638,74594
+static void gfs_output_droplet_sums_init 2646,74940
+GfsOutputClass * gfs_output_droplet_sums_class 2651,75068
+static void output_error_norm_destroy 2679,75806
+static void output_error_norm_read 2687,76082
+static void output_error_norm_write 2794,79008
+static void reference_solution 2812,79576
+static void substract 2818,79763
+static void compute_error 2824,79956
+static void remove_bias 2830,80162
+static gboolean gfs_output_error_norm_event 2837,80319
+static void gfs_output_error_norm_class_init 2921,83430
+static void output_error_norm_init 2929,83754
+GfsOutputClass * gfs_output_error_norm_class 2935,83929
+static void compute_correlation 2963,84603
+static gboolean gfs_output_correlation_event 2978,85004
+static void gfs_output_correlation_class_init 3034,86894
+GfsOutputClass * gfs_output_correlation_class 3039,87035
+static gboolean gfs_output_squares_event 3067,87698
+static void gfs_output_squares_class_init 3083,88212
+GfsOutputClass * gfs_output_squares_class 3088,88345
+static void gfs_output_streamline_read 3116,88980
+static void gfs_output_streamline_write 3148,89882
+static gboolean gfs_output_streamline_event 3158,90236
+static void gfs_output_streamline_class_init 3180,90926
+GfsOutputClass * gfs_output_streamline_class 3187,91193
+static void gfs_output_ppm_read 3215,91862
+static gboolean gfs_output_ppm_event 3232,92352
+static void gfs_output_ppm_class_init 3254,93048
+GfsOutputClass * gfs_output_ppm_class 3260,93229
+static gboolean gfs_output_grd_event 3288,93863
+static void gfs_output_grd_class_init 3305,94363
+GfsOutputClass * gfs_output_grd_class 3310,94488
+static void output_object_read 3338,95139
+static void output_object_write 3356,95699
+static gboolean output_object_event 3365,95961
+static void gfs_output_object_class_init 3379,96320
+GfsOutputClass * gfs_output_object_class 3386,96558
+
+function.h,828
+#define __FUNCTION_H__21,856
+#define NODATA 23,880
+static double Dirichlet 25,907
+static double Neumann 26,937
+static GfsSimulation * _sim 27,965
+static FttCell * _cell 28,1001
+static double dd 30,1033
+static double dd2 39,1376
+static double dx 56,2009
+static double dy 57,2076
+static double dx2 58,2143
+static double dy2 59,2212
+static double dz 61,2293
+static double dz2 62,2360
+static double area 65,2446
+static double correctness 80,2982
+static double distance 89,3293
+static gboolean is_velocity 102,3672
+static void dirichlet_bc 113,3905
+static double dsd 119,4025
+static double dsx 140,4789
+static double dsy 141,4858
+static double dsz 143,4939
+static double flux 146,5025
+static gboolean overlaps 176,6103
+static double mapv 197,6823
+static double mapvx 205,7059
+static double mapvy 206,7131
+
+levelset.h,344
+#define __LEVELSET_H__21,861
+typedef struct _GfsVariableDistance                GfsVariableDistance;31,1001
+struct _GfsVariableDistance 33,1074
+  GfsVariable parent;35,1122
+  gboolean first_done;36,1144
+  GfsVariable * v;39,1185
+  gboolean stencil;40,1204
+#define GFS_VARIABLE_DISTANCE(43,1228
+#define GFS_IS_VARIABLE_DISTANCE(46,1383
+
+ftt.c,3408
+#define  FTT_CELL_IS_DESTROYED(26,909
+gchar * ftt_direction_name[ftt_direction_name28,985
+gint ftt_opposite_direction[ftt_opposite_direction35,1124
+typedef struct _FttOct      FttOct;42,1264
+typedef struct _FttRootCell FttRootCell;43,1300
+static void oct_new 45,1342
+FttCell * ftt_cell_new 92,2451
+gboolean ftt_cell_check 110,2748
+void ftt_cell_refine_single 146,3836
+void ftt_cell_refine 169,4535
+void ftt_cell_draw 201,5325
+void ftt_face_draw 245,6292
+static gdouble coords[coords301,7888
+void ftt_cell_relative_pos 327,8435
+void ftt_cell_pos 349,8887
+void ftt_corner_relative_pos 379,9653
+void ftt_corner_pos 413,10624
+void ftt_face_pos 438,11162
+static void update_children_pos 458,11721
+void ftt_cell_set_pos 479,12267
+static void update_children_level 490,12525
+void ftt_cell_set_level 511,13064
+static void update_neighbor 520,13276
+void ftt_cell_set_neighbor 568,14688
+static void update_neighbor_match 596,15525
+void ftt_cell_set_neighbor_match 663,17596
+static void cell_traverse_pre_order_all 689,18308
+static void cell_traverse_post_order_all 717,18988
+static void cell_traverse_leafs 740,19502
+static void cell_traverse_pre_order_nonleafs 763,20024
+static void cell_traverse_post_order_nonleafs 791,20769
+static void cell_traverse_level 814,21310
+static void cell_traverse_level_leafs 834,21776
+static void cell_traverse_level_non_leafs 854,22299
+void ftt_cell_traverse 889,23422
+void ftt_cell_traverse_condition 948,25417
+void ftt_cell_bbox 995,26824
+static gboolean cell_is_in_box 1014,27230
+void ftt_cell_traverse_box 1040,28110
+static void cell_traverse_boundary_pre_order_all 1055,28521
+static void cell_traverse_boundary_post_order_all 1083,29255
+static void cell_traverse_boundary_leafs 1106,29825
+static void cell_traverse_boundary_pre_order_nonleafs 1129,30374
+static void cell_traverse_boundary_post_order_nonleafs 1157,31176
+static void cell_traverse_boundary_level 1179,31748
+static void cell_traverse_boundary_level_leafs 1199,32266
+static void cell_traverse_boundary_level_non_leafs 1219,32818
+void ftt_cell_traverse_boundary 1256,34086
+static void oct_destroy 1299,35499
+void ftt_cell_destroy 1324,36138
+void ftt_cell_destroy_root 1392,38075
+void ftt_cell_flatten 1476,40743
+FttCell * ftt_cell_locate 1535,42509
+static void bubble_sort 1576,43633
+gdouble ftt_cell_point_distance2_min 1599,44125
+void ftt_cell_point_distance2_internal 1623,44818
+gdouble ftt_cell_point_distance2 1667,46065
+guint ftt_cell_depth 1694,46777
+void ftt_cell_write 1728,47653
+void ftt_cell_write_binary 1771,48806
+#define FTT_CELL_IS_FLAGGED_LEAF(1800,49493
+static gboolean cell_read 1807,49685
+static gboolean oct_read 1842,50646
+static void set_neighbors 1868,51183
+FttCell * ftt_cell_read 1887,51777
+static gboolean cell_read_binary 1913,52373
+static gboolean oct_read_binary 1945,53257
+FttCell * ftt_cell_read_binary 1985,54302
+gboolean ftt_refine_corner 2013,54985
+static void copy_cell 2077,56523
+FttCell * ftt_cell_copy 2111,57375
+void ftt_face_traverse 2152,58776
+static void traverse_face_boundary 2217,60532
+void ftt_face_traverse_boundary 2247,61587
+gboolean ftt_cell_coarsen 2282,62583
+FttDirection ftt_direction_from_name 2352,64501
+static void cell_traverse_add 2363,64731
+FttCellTraverse * ftt_cell_traverse_new 2380,65256
+void ftt_cell_traverse_rewind 2406,65892
+void ftt_cell_traverse_destroy 2419,66119
+
+utils.c,4763
+typedef gint (*GTmpFileCallback)GTmpFileCallback44,1398
+static gint get_tmp_file 46,1455
+static gint wrap_mkdir 111,3139
+gchar * g_mkdtemp 118,3257
+static gint wrap_mkfifo 127,3419
+gchar * gfs_mkftemp 145,3850
+gchar * gfs_template 158,4066
+void gfs_object_clone 172,4418
+gboolean gfs_char_in_string 198,5121
+gchar * gfs_file_statement 219,5595
+typedef gdouble (* GfsFunctionFunc)247,6272
+typedef gdouble (* GfsFunctionDerivedFunc)252,6463
+struct _GfsGlobal 262,6677
+  GtsObject parent;264,6715
+  gchar * s;267,6753
+  guint line;268,6766
+  gboolean appended;269,6780
+static void global_destroy 272,6805
+static void global_write 278,6952
+static void global_read 285,7123
+static void gfs_global_class_init 310,7835
+GtsObjectClass * gfs_global_class 317,7999
+static void gfs_global_append 338,8496
+typedef struct _GfsModule GfsModule;348,8734
+struct _GfsModule 350,8772
+  gchar * key;351,8792
+  guint id;352,8807
+  GModule * module;353,8819
+  GSList * l;354,8839
+struct _GfsFunction 359,8911
+  GtsObject parent;360,8933
+  GString * expr;361,8953
+  gboolean isexpr;362,8971
+  GfsModule * module;363,8990
+  GfsFunctionFunc f;364,9012
+  gchar * sname;365,9033
+  GtsSurface * s;366,9050
+  GfsCartesianGrid * g;367,9068
+  guint index[index368,9092
+  GfsVariable * v;369,9110
+  GfsDerivedVariable * dv;370,9129
+  gdouble val;371,9156
+  gboolean spatial,372,9171
+  gboolean spatial, constant,372,9171
+  gboolean spatial, constant, nomap;372,9171
+  gdouble units;373,9208
+  GfsVariable ** var;374,9225
+  GfsDerivedVariable ** dvar;375,9247
+static gchar * function_key 382,9336
+static gchar * find_identifier 400,9784
+static GString * pending_functions 416,10219
+static guint n_pending_functions 417,10262
+static void append_pending_function 420,10357
+static GHashTable * get_function_cache 552,14647
+static void link_module 560,14856
+static void gfs_module_ref 611,16359
+static void gfs_module_unref 619,16515
+static gboolean lookup_function 626,16719
+static void gfs_module_new 639,17030
+static double current_time 651,17377
+static GModule * compile 658,17493
+static void update_module 721,19562
+void gfs_pending_functions_compilation 737,19923
+static GtsSurface * read_surface 771,21004
+#define INDEX_T 794,21614
+static gboolean fit_index_dimension 796,21633
+static gboolean cgd_is_spatial 820,22253
+static gdouble interpolated_cgd 829,22416
+GString * gfs_function_expression 868,23413
+static void function_read 985,26188
+static void function_write 1051,28160
+static void function_destroy 1068,28615
+static void gfs_function_class_init 1090,29109
+GfsFunctionClass * gfs_function_class 1097,29335
+GfsFunction * gfs_function_new 1125,29989
+GfsFunction * gfs_function_new_from_variable 1136,30203
+void gfs_function_set_units 1156,30595
+static gdouble interpolated_value 1163,30722
+gchar * gfs_function_description 1184,31224
+static gdouble adimensional_value 1215,31777
+gdouble gfs_function_value 1231,32147
+gdouble gfs_function_face_value 1268,33147
+void gfs_function_set_constant_value 1306,34208
+gdouble gfs_function_get_constant_value 1322,34560
+gboolean gfs_function_is_constant 1339,34937
+GfsVariable * gfs_function_get_variable 1353,35229
+void gfs_function_read 1368,35486
+void gfs_function_write 1387,35899
+static void gfs_function_spatial_init 1402,36184
+GfsFunctionClass * gfs_function_spatial_class 1407,36266
+gdouble gfs_function_spatial_value 1435,36939
+GfsFunction * gfs_function_spatial_new 1455,37532
+static void gfs_function_map_init 1475,37964
+GfsFunctionClass * gfs_function_map_class 1480,38040
+static void gfs_function_constant_init 1508,38674
+GfsFunctionClass * gfs_function_constant_class 1513,38758
+gdouble gfs_read_constant 1544,39490
+GtsObjectClass * gfs_object_class_from_name 1572,40309
+static void eigsrt 1589,40792
+#define ROTATE(1612,41221
+void gfs_eigenvalues 1623,41495
+gdouble gfs_matrix_inverse 1716,43947
+#define SWAP(1729,44349
+gpointer gfs_matrix_new 1793,45755
+void gfs_matrix_free 1816,46221
+GfsClock * gfs_clock_new 1829,46397
+void gfs_clock_start 1844,46604
+void gfs_clock_stop 1863,46919
+gdouble gfs_clock_elapsed 1882,47278
+void gfs_clock_destroy 1903,47792
+FILE * gfs_union_open 1923,48245
+void gfs_union_close 1952,49072
+static GfsFormat * format_new 1991,50220
+static void format_destroy 2003,50431
+GSList * gfs_format_new 2021,50844
+void gfs_format_destroy 2094,52558
+gchar * gfs_format_string 2112,53060
+gdouble gfs_format_time_value 2163,54165
+void gfs_cell_message 2220,55468
+static gboolean GfsDebug 2238,55920
+void gfs_debug 2248,56119
+void gfs_debug_enabled 2265,56494
+gboolean gfs_read_vector 2281,56904
+gboolean gfs_read_variable_vector 2350,58760
+gboolean gfs_read_function_vector 2392,60060
+
+output.h,4546
+#define __OUTPUT_H__21,854
+typedef struct _GfsOutput         GfsOutput;31,979
+typedef struct _GfsOutputClass    GfsOutputClass;32,1024
+typedef struct _GfsOutputFile     GfsOutputFile;33,1074
+struct _GfsOutput 35,1124
+  GfsEvent parent;36,1144
+  GfsOutputFile * file;38,1164
+  gchar * format;39,1188
+  GSList * formats;40,1206
+  gboolean dynamic,41,1226
+  gboolean dynamic, parallel,41,1226
+  gboolean dynamic, parallel, first_call;41,1226
+struct _GfsOutputClass 44,1272
+  GfsEventClass parent_class;45,1297
+#define GFS_OUTPUT(48,1331
+#define GFS_OUTPUT_CLASS(51,1454
+#define GFS_IS_OUTPUT(54,1575
+struct _GfsOutputFile 60,1781
+  guint refcount;61,1805
+  gchar * name;62,1823
+  FILE * fp;63,1839
+  gboolean is_pipe;64,1852
+typedef struct _GfsOutputSolidForce         GfsOutputSolidForce;106,2828
+struct _GfsOutputSolidForce 108,2894
+  GfsOutput parent;110,2942
+  GfsFunction * weight;113,2980
+#define GFS_OUTPUT_SOLID_FORCE(116,3008
+typedef struct _GfsOutputLocation         GfsOutputLocation;124,3250
+struct _GfsOutputLocation 126,3312
+  GfsOutput parent;128,3358
+  GArray * p;131,3396
+  gchar * precision,132,3410
+  gchar * precision, * label;132,3410
+  gboolean interpolate;133,3440
+#define GFS_OUTPUT_LOCATION(136,3468
+#define GFS_IS_OUTPUT_LOCATION(139,3613
+typedef struct _GfsOutputSimulation         GfsOutputSimulation;146,3817
+typedef enum   { GFS,147,3882
+		 GFS_TEXT,148,3905
+		 GFS_VTK,149,3919
+		 GFS_TECPLOT 150,3932
+		 GFS_TECPLOT }              GfsOutputSimulationFormat;150,3932
+struct _GfsOutputSimulation 152,3990
+  GfsOutput parent;153,4020
+  gint max_depth;155,4041
+  GSList * var;156,4059
+  gboolean binary,157,4075
+  gboolean binary, solid;157,4075
+  gchar * precision;158,4101
+  GfsOutputSimulationFormat format;159,4122
+#define GFS_OUTPUT_SIMULATION(162,4162
+#define GFS_OUTPUT_SIMULATION_CLASS(165,4305
+#define GFS_IS_OUTPUT_SIMULATION(168,4450
+typedef struct _GfsOutputScalar         GfsOutputScalar;179,4754
+struct _GfsOutputScalar 181,4812
+  GfsOutput parent;183,4856
+  gboolean autoscale;184,4876
+  GfsFunction * f;185,4898
+  GfsVariable * v;188,4937
+  gchar * name;189,4956
+  gdouble min,190,4972
+  gdouble min, max;190,4972
+  gint maxlevel;191,4992
+  GfsFunction * condition,192,5009
+  GfsFunction * condition, * w;192,5009
+  gchar * format;193,5041
+#define GFS_OUTPUT_SCALAR(196,5063
+#define GFS_IS_OUTPUT_SCALAR(199,5202
+typedef struct _GfsOutputScalarMaxima         GfsOutputScalarMaxima;218,5675
+struct _GfsOutputScalarMaxima 220,5745
+  GfsOutputScalar parent;222,5795
+  guint N;225,5841
+  gdouble * m[m226,5852
+#define GFS_OUTPUT_SCALAR_MAXIMA(229,5874
+#define GFS_IS_OUTPUT_SCALAR_MAXIMA(232,6033
+typedef struct _GfsOutputScalarHistogram         GfsOutputScalarHistogram;239,6257
+struct _GfsOutputScalarHistogram 241,6333
+  GfsOutputScalar parent;243,6386
+  gdouble * x,246,6432
+  gdouble * x, * y,246,6432
+  gdouble * x, * y, * w,246,6432
+  gdouble * x, * y, * w, W;246,6432
+  GfsFunction * wf,247,6460
+  GfsFunction * wf, * yf;247,6460
+  gdouble last,248,6486
+  gdouble last, dt;248,6486
+  guint n;249,6506
+#define GFS_OUTPUT_SCALAR_HISTOGRAM(252,6521
+#define GFS_IS_OUTPUT_SCALAR_HISTOGRAM(255,6689
+typedef struct _GfsOutputDropletSums         GfsOutputDropletSums;262,6918
+struct _GfsOutputDropletSums 264,6986
+  GfsOutputScalar parent;266,7035
+  GfsFunction * c;269,7079
+  GfsVariable * tag;270,7098
+#define GFS_OUTPUT_DROPLET_SUMS(273,7123
+#define GFS_IS_OUTPUT_DROPLET_SUMS(276,7279
+typedef struct _GfsOutputErrorNorm        GfsOutputErrorNorm;283,7494
+struct _GfsOutputErrorNorm 285,7557
+  GfsOutputScalar parent;287,7604
+  GfsVariable * v;288,7630
+  GfsFunction * s;291,7669
+  gboolean unbiased,292,7688
+  gboolean unbiased, relative;292,7688
+  GfsFunction * w;293,7719
+#define GFS_OUTPUT_ERROR_NORM(296,7742
+#define GFS_IS_OUTPUT_ERROR_NORM(299,7892
+#define GFS_IS_OUTPUT_SQUARES(310,8191
+typedef struct _GfsOutputStreamline         GfsOutputStreamline;317,8392
+struct _GfsOutputStreamline 319,8458
+  GfsOutputScalar parent;321,8506
+  FttVector p;324,8550
+#define GFS_OUTPUT_STREAMLINE(327,8569
+#define GFS_IS_OUTPUT_STREAMLINE(330,8713
+#define GFS_IS_OUTPUT_PARTICLE(337,8922
+#define GFS_IS_OUTPUT_PPM(344,9119
+#define GFS_IS_OUTPUT_GRD(351,9301
+typedef struct _GfsOutputObject         GfsOutputObject;358,9486
+struct _GfsOutputObject 360,9544
+  GfsOutput parent;362,9588
+  GtsObject * object;365,9626
+#define GFS_OUTPUT_OBJECT(368,9652
+#define GFS_IS_OUTPUT_OBJECT(371,9791
+
+ftt.h,4462
+#define __FTT_H__21,851
+#define FTT_MAINTAINER 32,1003
+# define FTT_CELLS 35,1060
+# define FTT_CELLS 37,1105
+typedef struct _FttCell          FttCell;40,1151
+typedef struct _FttCellFace      FttCellFace;41,1193
+typedef struct _FttCellNeighbors FttCellNeighbors;42,1239
+typedef struct _FttCellChildren  FttCellChildren;43,1290
+typedef struct _FttVector        FttVector;45,1341
+struct _FttVector 47,1386
+  gdouble x,48,1406
+  gdouble x, y,48,1406
+  gdouble x, y, z;48,1406
+# define ftt_vector_norm(52,1440
+# define ftt_vector_distance(53,1506
+# define ftt_vector_norm(56,1651
+# define ftt_vector_distance(57,1733
+  FTT_TRAVERSE_LEAFS 64,1944
+  FTT_TRAVERSE_NON_LEAFS 65,1984
+  FTT_TRAVERSE_LEVEL 66,2024
+  FTT_TRAVERSE_BOUNDARY_FACES 67,2064
+  FTT_TRAVERSE_DESTROYED 68,2104
+  FTT_TRAVERSE_ALL 69,2144
+  FTT_TRAVERSE_ALL            = FTT_TRAVERSE_LEAFS 69,2144
+  FTT_TRAVERSE_ALL            = FTT_TRAVERSE_LEAFS | FTT_TRAVERSE_NON_LEAFS69,2144
+} FttTraverseFlags;70,2220
+  FTT_PRE_ORDER,74,2256
+  FTT_POST_ORDER75,2273
+} FttTraverseType;76,2290
+  FTT_RIGHT 80,2325
+  FTT_LEFT,81,2342
+  FTT_TOP,82,2354
+  FTT_BOTTOM,83,2365
+  FTT_FRONT,85,2393
+  FTT_BACK,86,2406
+  FTT_NEIGHBORS88,2438
+} FttDirection;89,2454
+#define FTT_NEIGHBORS_2D 91,2471
+#define FTT_CELLS_DIRECTION(92,2513
+GTS_C_VAR gchar * ftt_direction_name[ftt_direction_name94,2559
+  FTT_X 98,2651
+  FTT_Y,99,2664
+  FTT_Z,101,2687
+  FTT_DIMENSION,103,2716
+  FTT_XY,104,2733
+  FTT_XYZ 106,2754
+  FTT_XYZ = FTT_XY106,2754
+  FTT_XYZ108,2793
+} FttComponent;110,2823
+  FTT_FLAG_ID 113,2855
+  FTT_FLAG_DESTROYED 114,2881
+  FTT_FLAG_LEAF 115,2912
+  FTT_FLAG_TRAVERSED 116,2985
+  FTT_FLAG_TRAVERSED = FTT_FLAG_LEAF,116,2985
+  FTT_FLAG_USER 117,3053
+} FttCellFlags;118,3119
+typedef void      (* FttCellTraverseFunc)120,3136
+typedef void      (* FttCellInitFunc)122,3234
+struct _FttCellNeighbors 125,3333
+  FttCell * c[c127,3406
+struct _FttCellChildren 130,3440
+  FttCell * c[c131,3466
+struct _FttCell 134,3496
+  guint flags;136,3531
+  gpointer data;137,3546
+  struct _FttOct * parent,140,3582
+  struct _FttOct * parent, * children;140,3582
+struct _FttRootCell 143,3625
+  FttCell cell;144,3647
+  FttCellNeighbors neighbors;146,3664
+  FttVector pos;147,3694
+  guint level;148,3711
+  gpointer parent;149,3726
+struct _FttOct 152,3749
+  guint level;153,3766
+  FttCell * parent;154,3781
+  FttCellNeighbors neighbors;155,3801
+  FttVector pos;156,3831
+  FttCell cell[cell158,3849
+struct _FttCellFace 161,3880
+  FttCell * cell,162,3902
+  FttCell * cell, * neighbor;162,3902
+  FttDirection d;163,3932
+#define  FTT_ROOT_CELL(166,3954
+#define  FTT_CELL_ID(167,4016
+#define  FTT_CELL_IS_LEAF(168,4077
+#define  FTT_CELL_IS_ROOT(169,4135
+#define  FTT_CELL_IS_DESTROYED(170,4191
+  FTT_BOUNDARY,173,4282
+  FTT_FINE_FINE,174,4298
+  FTT_FINE_COARSE175,4315
+} FttFaceType;176,4333
+#define  FTT_FACE_DIRECT(178,4349
+#define  FTT_FACE_REVERSE(179,4401
+gint                 ftt_opposite_direction[ftt_opposite_direction185,4571
+#define FTT_OPPOSITE_DIRECTION(187,4632
+#define FTT_ORTHOGONAL_COMPONENT(188,4698
+#define g_assert_not_implemented(192,4790
+#define g_assert_not_implemented(198,4874
+#define g_assert_not_implemented(208,5155
+#define              ftt_cell_level(221,5526
+#define              ftt_cell_parent(224,5726
+#define              ftt_cell_dz(226,5851
+gdouble ftt_level_size 235,6009
+gdouble ftt_cell_size 254,6236
+gdouble ftt_cell_volume 268,6492
+void ftt_cell_children 292,6947
+guint ftt_cell_children_direction 322,7659
+FttCell * ftt_cell_child_corner 367,8741
+void ftt_cell_neighbors_not_cached 433,10788
+FttCell * ftt_cell_neighbor_not_cached 492,12316
+void ftt_cell_neighbors 540,13541
+FttCell * ftt_cell_neighbor 563,14124
+FttCellFace ftt_cell_face 583,14557
+FttFaceType ftt_face_type 600,14828
+gboolean ftt_cell_neighbor_is_brother 621,15414
+typedef gboolean  (* FttCellRefineFunc)672,17482
+typedef void      (* FttFaceTraverseFunc)712,19100
+typedef void      (* FttCellCopyFunc)751,20597
+typedef void      (* FttCellWriteFunc)757,20865
+typedef void      (* FttCellReadFunc)770,21374
+typedef void      (* FttCellCleanupFunc)779,21758
+typedef gboolean  (* FttCellCoarsenFunc)792,22285
+struct _FttCellTraverse 801,22640
+  FttCell ** cells;802,22666
+  FttCell ** current;803,22686
+typedef struct _FttCellTraverse FttCellTraverse;806,22712
+FttCell * ftt_cell_traverse_next 816,23069
+
+utils.h,1580
+#define __UTILS_H__21,858
+# define gfs_all_reduce(36,1079
+# define gfs_error(44,1364
+#    define gfs_all_reduce(63,2464
+#    define gfs_error(64,2512
+#  define M_PI 76,2789
+#define GFS_DOUBLE_TO_POINTER(79,2835
+#define GFS_NODATA 80,2895
+#define GFS_HAS_DATA(81,2944
+typedef struct _GfsGlobal         GfsGlobal;94,3288
+#define GFS_GLOBAL(96,3334
+#define GFS_IS_GLOBAL(99,3453
+typedef struct _GfsFunction         GfsFunction;106,3624
+typedef struct _GfsFunctionClass    GfsFunctionClass;108,3674
+struct _GfsFunctionClass 110,3729
+  GtsObjectClass parent_class;111,3756
+#define GFS_FUNCTION(114,3791
+#define GFS_FUNCTION_CLASS(117,3916
+#define GFS_IS_FUNCTION(120,4039
+#define GFS_IS_FUNCTION_SPATIAL(152,5452
+typedef gdouble (* GfsFunctionSpatialFunc)155,5574
+#define GFS_IS_FUNCTION_MAP(164,5950
+#define GFS_IS_FUNCTION_CONSTANT(171,6150
+  gboolean started;192,6939
+  glong start,193,6959
+  glong start, stop;193,6959
+} GfsClock;194,6980
+  FILE * fp;203,7303
+  char * buf;204,7316
+  size_t len;205,7330
+} GfsUnionFile;206,7344
+typedef struct _GfsFormat GfsFormat;217,7606
+  GFS_ITER_FORMAT,220,7659
+  GFS_TIME_FORMAT,221,7678
+  GFS_PID_FORMAT,222,7697
+  GFS_NONE_FORMAT223,7715
+} GfsFormatType;224,7733
+struct _GfsFormat 226,7751
+  gchar * s;227,7771
+  GfsFormatType t;228,7784
+#undef g_assert262,9093
+#undef g_assert_not_reached263,9109
+#define g_assert(267,9163
+#define g_assert_not_reached(268,9222
+#define g_assert(274,9337
+#define g_assert_not_reached(285,9828
+#define g_assert(296,10237
+#define g_assert_not_reached(305,10506
+
+surface.c,1306
+GfsGenericSurfaceClass * gfs_generic_surface_class 32,1051
+GfsGenericSurface * gfs_cell_is_cut 63,1945
+static void cell_traverse_cut 74,2347
+void gfs_cell_traverse_cut 127,4151
+void gfs_cell_traverse_cut_2D 156,5047
+void gfs_generic_surface_read 178,5580
+void gfs_generic_surface_write 197,5991
+guint gfs_surface_segment_intersection 216,6468
+void gfs_surface_segment_normal 237,7101
+gint gfs_surface_point_is_inside 260,7734
+void gfs_surface_transformation 288,8476
+static void point_map 333,9642
+static void surface_read 338,9754
+static void surface_write 462,13605
+static void surface_destroy 511,15230
+static void face_overlaps_box 527,15621
+#define SIGN(542,15998
+static GfsGenericSurface * cell_is_cut 544,16050
+static gdouble segment_triangle_intersection 593,17389
+static void triangle_face_intersection 639,18672
+static GtsPoint segment_intersection 650,18912
+static guint surface_segment_intersection 663,19285
+static void surface_normal 722,20679
+static void surface_segment_normal 731,20853
+static void add_tetrahedron_volume 755,21472
+static gint point_is_inside_surface 764,21762
+static void gfs_surface_class_init 786,22311
+static void gfs_surface_init 798,22787
+GfsGenericSurfaceClass * gfs_surface_class 807,23028
+gdouble gfs_surface_implicit_value 835,23734
+
+ocean.c,3284
+static void correct_normal_velocity 40,1157
+static void scale_gradients 71,1990
+static void gfs_correct_normal_velocities_weighted 100,2858
+#define THETA 138,4041
+  GfsVariable * pn,141,4077
+  GfsVariable * pn, * div,141,4077
+  GfsVariable * pn, * div, * divn,141,4077
+  GfsVariable * pn, * div, * divn, * dia;141,4077
+  gdouble dt,142,4119
+  gdouble dt, G;142,4119
+} FreeSurfaceParams;143,4136
+static void normal_divergence 145,4158
+static void scale_divergence_helmoltz 150,4309
+static void merge_pressures 168,4817
+static void gfs_free_surface_pressure 203,5582
+static void normal_velocities 251,6976
+static void ocean_run 261,7370
+static void gfs_ocean_class_init 360,11118
+static void gfs_ocean_init 365,11211
+GfsSimulationClass * gfs_ocean_class 370,11329
+#define MAC 392,11856
+static void ocean_destroy 394,11871
+#define MAXLEVEL 409,12295
+static void ocean_read 411,12316
+static void ocean_write 430,12995
+static void new_layer 443,13376
+static void add_layer 456,13762
+static void ocean_post_read 474,14361
+static void compute_w 484,14748
+static void compute_div 509,15568
+static gdouble height 534,16383
+static void compute_H 546,16689
+static void face_interpolated_normal_velocity 551,16789
+static void depth_integrated_divergence 593,17891
+static void compute_coeff 611,18582
+static void face_coeff_from_below 632,19085
+static void depth_integrated_coefficients 659,19731
+static void ocean_run 670,20187
+static void gfs_ocean_class_init 810,25268
+static void depth_coarse_fine 819,25567
+static void depth_fine_coarse 833,25955
+static void gfs_ocean_init 838,26069
+GfsSimulationClass * gfs_ocean_class 848,26404
+static void hydrostatic_pressure 868,26915
+void gfs_hydrostatic_pressure 901,27785
+static void gfs_source_hydrostatic_destroy 926,28389
+static void gfs_source_hydrostatic_read 935,28650
+static void gfs_source_hydrostatic_write 970,29735
+static gdouble gfs_source_hydrostatic_mac_value 978,30007
+static gdouble gfs_source_hydrostatic_centered_value 986,30244
+static void copy_ph 996,30591
+static gboolean gfs_source_hydrostatic_event 1001,30713
+static void gfs_source_hydrostatic_event_half 1022,31455
+static void gfs_source_hydrostatic_class_init 1030,31761
+static void gfs_source_hydrostatic_init 1040,32185
+GfsSourceGenericClass * gfs_source_hydrostatic_class 1046,32365
+static void gfs_source_friction_destroy 1074,33049
+static void gfs_source_friction_read 1085,33361
+static void gfs_source_friction_write 1114,34238
+static gdouble gfs_source_friction_saved_value 1120,34480
+static void save_velocity 1131,34789
+static gboolean gfs_source_friction_event 1139,34998
+static void gfs_source_friction_class_init 1150,35376
+static void gfs_source_friction_init 1158,35709
+GfsSourceGenericClass * gfs_source_friction_class 1163,35844
+static void bc_flather_write 1193,36637
+static void set_gradient_boundary 1204,36926
+static void bc_flather_read 1209,37027
+static void bc_flather_destroy 1248,38311
+static gdouble flather_value 1256,38535
+static void flather 1293,39714
+static void homogeneous_flather 1299,39909
+static void face_flather 1305,40092
+static void gfs_bc_flather_class_init 1311,40262
+static void gfs_bc_flather_init 1318,40442
+GfsBcClass * gfs_bc_flather_class 1325,40687
+
+tension.c,3107
+static void gfs_source_tension_generic_destroy 36,1076
+static void gfs_source_tension_generic_read 42,1308
+static void gfs_source_tension_generic_write 67,2073
+  gdouble amin,76,2394
+  gdouble amin, amax;76,2394
+  guint depth;77,2416
+  gdouble sigma;78,2431
+  GfsSourceTensionGeneric * t;79,2448
+  GfsFunction * alpha;80,2479
+  GfsVariable * c;81,2502
+} StabilityParams;82,2521
+static void interface_level 84,2541
+static void min_max_alpha 96,2921
+static gdouble gfs_source_tension_generic_stability 106,3162
+static void gfs_source_tension_generic_class_init 139,4282
+static void gfs_source_tension_generic_init 147,4662
+GfsSourceGenericClass * gfs_source_tension_generic_class 152,4800
+static void gfs_source_tension_css_read 181,5601
+static void foreach_cell_normal 198,6187
+static void foreach_cell_tension_css 215,6733
+static gboolean gfs_source_tension_css_event 231,7284
+static gdouble gfs_source_tension_css_value 260,8207
+static void gfs_source_tension_css_class_init 267,8405
+static void gfs_source_tension_css_init 273,8617
+GfsSourceGenericClass * gfs_source_tension_css_class 278,8737
+static void gfs_source_tension_read 307,9518
+static void gfs_source_tension_write 330,10241
+static gdouble gfs_source_tension_stability 336,10449
+static void gfs_source_tension_class_init 354,11127
+GfsSourceGenericClass * gfs_source_tension_class 361,11410
+static void variable_curvature_destroy 390,12112
+static void curvature_coarse_fine 398,12370
+static void curvature_fine_coarse 409,12631
+static void variable_curvature_read 427,13058
+static void variable_curvature_write 484,14934
+static void height_curvature 495,15239
+static void fit_curvature 517,15852
+  GfsVariable * v,535,16399
+  GfsVariable * v, * f,535,16399
+  GfsVariable * v, * f, * tmp;535,16399
+} DiffuseParms;536,16430
+#define FMIN 538,16447
+static void diffuse_kmax 540,16466
+static void diffuse 567,17219
+static void variable_curvature_diffuse 589,17776
+static void variable_curvature_from_fraction 610,18502
+static void normal 641,20128
+static void distance_curvature 655,20513
+static void interface_curvature 666,20815
+static void variable_curvature_from_distance 694,21620
+  GfsVariableCurvature * k;729,23029
+  FttComponent c;730,23057
+  GfsVariable * max;731,23075
+} CurvatureData;732,23096
+static gboolean is_interfacial 734,23114
+static void set_undefined 740,23273
+static void set_curvature 746,23428
+static void propagate_curvature 757,23846
+static void height_curvature_max 776,24476
+static void remaining_curvatures 786,24814
+static gboolean variable_curvature_event 801,25303
+static void variable_curvature_class_init 854,27971
+static void variable_curvature_init 862,28235
+GfsVariableClass * gfs_variable_curvature_class 869,28396
+static void variable_position_read 897,29109
+static void variable_position_write 933,30208
+static void position 944,30544
+static gboolean variable_position_event 955,30859
+static void variable_position_class_init 977,31694
+static void variable_position_init 984,31907
+GfsVariableClass * gfs_variable_position_class 989,31982
+
+surface.h,1306
+#define __SURFACE_H__21,855
+typedef GtsObject GfsGenericSurface;32,1004
+  GtsPoint * E,35,1059
+  GtsPoint * E, * D;35,1059
+  gdouble x;36,1080
+  guint n;37,1093
+  gint inside;38,1104
+} GfsSegment;39,1119
+typedef struct _GfsGenericSurfaceClass    GfsGenericSurfaceClass;41,1134
+struct _GfsGenericSurfaceClass 43,1201
+  GtsObjectClass parent_class;45,1252
+  GfsGenericSurface * (* cell_is_cut)48,1301
+  guint               (* segment_intersection)52,1440
+  void                (* segment_normal)55,1556
+  gint                (* point_is_inside)59,1691
+#define GFS_GENERIC_SURFACE(63,1788
+#define GFS_GENERIC_SURFACE_CLASS(66,1925
+#define GFS_IS_GENERIC_SURFACE(69,2068
+typedef void       (* FttCellTraverseCutFunc)86,2769
+typedef struct _GfsSurface         GfsSurface;110,3562
+struct _GfsSurface 112,3610
+  GtsObject parent;114,3649
+  GtsVector rotate,115,3669
+  GtsVector rotate, scale,115,3669
+  GtsVector rotate, scale, translate;115,3669
+  gboolean flip;116,3707
+  GfsFunction * f;117,3724
+  GtsMatrix * m;118,3743
+  GNode * bbtree;119,3760
+  GtsSurface * s;122,3796
+  gboolean twod;123,3814
+  GtsFaceClass * face_class;125,3832
+  GtsEdgeClass * edge_class;126,3861
+  GtsVertexClass * vertex_class;127,3890
+#define GFS_SURFACE(130,3927
+#define GFS_IS_SURFACE(133,4049
+
+ocean.h,1183
+#define __OCEAN_H__22,873
+typedef struct _GfsOcean         GfsOcean;33,1021
+struct _GfsOcean 35,1065
+  GfsSimulation parent;36,1084
+  GPtrArray * layer;38,1120
+  GfsDomain * toplayer;39,1141
+#define GFS_OCEAN(43,1185
+#define GFS_IS_OCEAN(46,1301
+typedef struct _GfsSourceHydrostatic         GfsSourceHydrostatic;60,1653
+struct _GfsSourceHydrostatic 62,1721
+  GfsSourceVelocity parent;64,1770
+  GfsVariable * ph1;65,1798
+  gboolean not_first;66,1819
+  GfsVariable * ph,69,1859
+  GfsVariable * ph, * rho;69,1859
+#define GFS_SOURCE_HYDROSTATIC(72,1890
+#define GFS_IS_SOURCE_HYDROSTATIC(75,2044
+typedef struct _GfsSourceFriction         GfsSourceFriction;84,2281
+struct _GfsSourceFriction 86,2343
+  GfsSourceVelocity parent;88,2389
+  GfsVariable * u[u89,2417
+  GfsVariable * h;92,2469
+  gdouble f;93,2488
+#define GFS_SOURCE_FRICTION(96,2505
+#define GFS_IS_SOURCE_FRICTION(99,2650
+typedef struct _GfsBcFlather         GfsBcFlather;106,2854
+struct _GfsBcFlather 108,2906
+  GfsBcValue parent;110,2947
+  GfsVariable * h,113,2986
+  GfsVariable * h, * p;113,2986
+  GfsFunction * val;114,3010
+#define GFS_BC_FLATHER(117,3035
+#define GFS_IS_BC_FLATHER(120,3165
+
+tension.h,1466
+#define __TENSION_H__21,855
+typedef struct _GfsSourceTensionGeneric         GfsSourceTensionGeneric;31,996
+struct _GfsSourceTensionGeneric 33,1070
+  GfsSourceVelocity parent;35,1122
+  GfsVariable * c;38,1170
+  GfsFunction * sigma;39,1189
+#define GFS_SOURCE_TENSION_GENERIC(42,1216
+#define GFS_IS_SOURCE_TENSION_GENERIC(45,1381
+typedef struct _GfsSourceTensionCSS         GfsSourceTensionCSS;52,1612
+struct _GfsSourceTensionCSS 54,1678
+  GfsSourceTensionGeneric parent;56,1726
+  GfsVariable * g[g57,1760
+  GfsVariable * t[t60,1802
+#define GFS_SOURCE_TENSION_CSS(63,1840
+#define GFS_IS_SOURCE_TENSION_CSS(66,1993
+typedef struct _GfsSourceTension         GfsSourceTension;73,2209
+struct _GfsSourceTension 75,2269
+  GfsSourceTensionGeneric parent;77,2314
+  GfsVariable * k;80,2368
+#define GFS_SOURCE_TENSION(83,2391
+#define GFS_IS_SOURCE_TENSION(86,2533
+typedef struct _GfsVariableCurvature                GfsVariableCurvature;96,2885
+struct _GfsVariableCurvature 98,2960
+  GfsVariable parent;100,3009
+  GfsVariable * f,103,3049
+  GfsVariable * f, * kmax;103,3049
+#define GFS_VARIABLE_CURVATURE(106,3080
+#define GFS_IS_VARIABLE_CURVATURE(109,3238
+typedef struct _GfsVariablePosition                GfsVariablePosition;116,3456
+struct _GfsVariablePosition 118,3529
+  GfsVariableCurvature parent;120,3577
+  FttComponent c;123,3626
+  gdouble ref;124,3644
+#define GFS_VARIABLE_POSITION(127,3663
+#define GFS_IS_VARIABLE_POSITION(130,3818
+
+gerris.c,124
+static void set_box_pid 40,1203
+static void setup_binary_IO 45,1278
+static gboolean set_macros 59,1662
+int main 68,1832
+
+map.c,1221
+static void gfs_map_read 30,974
+static void gfs_map_write 58,1729
+static void gfs_map_class_init 63,1832
+static void not_implemented 69,1990
+static double evaluate 74,2110
+#define DELTA 86,2391
+#define NMAX 87,2410
+static void jacobian 89,2428
+static void map_transform 102,2785
+static void normalized_jacobian 128,3530
+static void map_inverse_vector 145,3922
+static void map_transform_vector 159,4299
+static void inverse_cell 179,4832
+static void gfs_map_init 186,5005
+GfsMapClass * gfs_map_class 195,5246
+static void gfs_map_function_read 223,5804
+static void gfs_map_function_write 258,6667
+static void gfs_map_function_destroy 274,7109
+static void gfs_map_function_class_init 285,7408
+static void map_function_inverse 292,7657
+static void gfs_map_function_init 307,8118
+GfsMapClass * gfs_map_function_class 315,8402
+static void gfs_map_transform_destroy 342,9051
+static void gfs_map_transform_read 350,9290
+static void gfs_map_transform_write 411,11436
+static void gfs_map_transform_class_init 425,11978
+static void map_transform_transform 432,12177
+static void map_transform_inverse 440,12436
+static void gfs_map_transform_init 448,12692
+GfsMapClass * gfs_map_transform_class 456,12953
+
+graphic.c,4999
+  GPtrArray * colors;46,1232
+  gboolean reversed;47,1254
+} Colormap;48,1275
+static GtsColor * color_new 50,1288
+static void color_destroy 57,1446
+static Colormap * colormap_jet 64,1551
+static void colormap_destroy 93,2210
+static GtsColor colormap_color 105,2478
+typedef struct _VertexCellFace         VertexCellFace;138,3280
+struct _VertexCellFace 140,3336
+  GtsVertex parent;142,3379
+  guint index;145,3417
+  FttCell * cell;146,3432
+  FttCellFace face;147,3450
+#define VERTEX_CELL_FACE(150,3474
+static GtsVertexClass * vertex_cell_face_class 156,3641
+static void triangulate 177,4156
+static void triangulate_face 202,4803
+static void add_long_segment 232,5661
+void gfs_write_gts 247,6207
+static void extent 354,9474
+static void iso_func 369,9867
+GtsSurface * gfs_isosurface 389,10411
+static void write_gnuplot 434,11623
+void gfs_write_gnuplot 455,12199
+  guchar r,475,12621
+  guchar r, g,475,12621
+  guchar r, g, b;475,12621
+} Color;476,12639
+  FttVector min;479,12666
+  guint width,480,12683
+  guint width, height,480,12683
+  guint width, height, size;480,12683
+  guchar * buf,481,12712
+  guchar * buf, *** data;481,12712
+} Image;482,12738
+static Image * image_new 484,12748
+static void image_write 505,13320
+static void image_destroy 520,13710
+static void image_draw_square 531,13883
+static void write_image_square 553,14439
+static void max_extent 580,15219
+static gboolean cell_condition 595,15710
+void gfs_write_ppm 600,15830
+#define NODATA 702,18888
+  FttVector min;705,18927
+  gdouble cellsize;706,18944
+  guint width,707,18964
+  guint width, height;707,18964
+  gfloat * buf,708,18987
+  gfloat * buf, ** data;708,18987
+} Grid;709,19012
+static Grid * grid_new 711,19021
+static void grid_write 729,19569
+static void grid_destroy 747,19979
+static void max_physical_extent 754,20077
+void gfs_write_grd 785,21066
+static gint gfs_combine_close 864,23741
+static gint get_newline 879,23985
+gint gfs_combine_ppm 889,24119
+static void write_square 975,26445
+void gfs_write_squares 1033,27896
+static void write_mac 1065,28691
+void gfs_write_mac_velocity 1106,29764
+void gfs_draw_cells 1130,30403
+void gfs_draw_levels 1144,30739
+static void draw_box_boundaries 1159,31081
+void gfs_draw_boundary_conditions 1208,32457
+static void draw_boundary_face 1223,32844
+void gfs_draw_solid_boundaries 1243,33287
+static void count_face 1258,33718
+static void draw_face 1272,34031
+void gfs_draw_refined_boundaries 1294,34546
+static gpointer color_data[color_data1318,35255
+static GtsColor variable_color 1320,35287
+void gfs_draw_surface 1348,35884
+typedef struct _GtsColoredVertex         GtsColoredVertex;1382,36809
+struct _GtsColoredVertex 1384,36869
+  GtsVertex parent;1386,36914
+  GtsColor c;1389,36952
+#define GTS_COLORED_VERTEX(1392,36970
+#define GTS_IS_COLORED_VERTEX(1395,37112
+static void gts_colored_vertex_read 1402,37310
+static void gts_colored_vertex_write 1432,38212
+static GtsColor gts_colored_vertex_color 1443,38579
+static void gts_colored_vertex_class_init 1448,38677
+static void gts_colored_vertex_init 1455,38933
+GtsVertexClass * gts_colored_vertex_class 1460,39050
+typedef struct _GfsVertex         GfsVertex;1483,39637
+struct _GfsVertex 1485,39683
+  GtsColoredVertex parent;1487,39721
+  gdouble v;1490,39766
+#define GFS_VERTEX(1493,39783
+#define GFS_IS_VERTEX(1496,39902
+static void gfs_vertex_read 1503,40068
+static void gfs_vertex_write 1518,40533
+static void gfs_vertex_class_init 1526,40802
+GtsPointClass * gfs_vertex_class 1532,40971
+typedef struct _GfsTwistedVertex         GfsTwistedVertex;1556,41514
+struct _GfsTwistedVertex 1558,41574
+  GfsVertex parent;1560,41619
+  gdouble theta;1563,41657
+#define GFS_TWISTED_VERTEX(1566,41678
+#define GFS_IS_TWISTED_VERTEX(1569,41820
+static void gfs_twisted_vertex_read 1576,42017
+static void gfs_twisted_vertex_write 1591,42506
+static void gfs_twisted_vertex_class_init 1599,42795
+GtsPointClass * gfs_twisted_vertex_class 1605,42988
+static void matrix_transpose 1627,43537
+static void base 1640,43736
+static void edge_list 1661,44202
+static void add_face 1715,45758
+static GList * next_far_enough 1739,46559
+void gfs_extrude_profile 1757,46860
+static gdouble triangle_area 1814,48118
+static gdouble circumcircle_radius 1824,48414
+static GSList * circle_profile 1839,48803
+static GSList * ribbon_profile 1853,49104
+static void vorticity_vector 1864,49384
+static gdouble interpolated_velocity 1879,49958
+static GList * grow_curve 1894,50429
+GList * gfs_streamline_new 2032,54135
+void gfs_streamline_write 2058,54819
+GList * gfs_streamline_read 2070,55114
+void gfs_streamline_draw 2107,55950
+void gfs_streamline_destroy 2123,56310
+void gfs_draw_stream_cylinder 2129,56445
+void gfs_draw_stream_ribbon 2159,57363
+void gfs_draw_streamline 2189,58273
+static gdouble point_orientation 2206,58639
+gboolean gfs_plane_cuts_cell 2234,59272
+static void cube_plane_intersection 2257,59949
+guint gfs_cut_cube_vertices 2322,62026
+
+init.c,474
+# define _GNU_SOURCE33,1108
+#     define EXCEPTIONS 38,1214
+#     define EXCEPTIONS 40,1274
+static void gfs_log 74,1912
+GtsObjectClass ** gfs_classes 122,3138
+static gboolean disabled_fpe 313,8642
+typedef void (* AtExitFunc)315,8681
+void gfs_catch_floating_point_exceptions 323,8846
+int gfs_restore_floating_point_exceptions 340,9279
+void gfs_disable_floating_point_exceptions 359,9704
+void gfs_enable_floating_point_exceptions 373,10010
+void gfs_init 391,10457
+
+version.h,60
+#define GFSVERSION_H7,104
+#define GFS_BUILD_VERSION 9,126
+
+map.h,1112
+#define __MAP_H__21,851
+typedef struct _GfsMap         GfsMap;32,992
+struct _GfsMap 34,1032
+  GtsSListContainee parent;36,1067
+  void (* transform)38,1096
+  void (* inverse)39,1184
+  void (* transform_vector)40,1272
+  void (* inverse_vector)42,1385
+  void (* inverse_cell)44,1498
+typedef struct _GfsMapClass    GfsMapClass;48,1607
+struct _GfsMapClass 50,1652
+  GtsSListContaineeClass parent_class;52,1692
+#define GFS_MAP(57,1753
+#define GFS_MAP_CLASS(60,1863
+#define GFS_IS_MAP(63,1971
+typedef struct _GfsMapFunction         GfsMapFunction;70,2135
+struct _GfsMapFunction 72,2191
+  GfsMap parent;74,2234
+  GfsFunction * x,77,2269
+  GfsFunction * x, * y,77,2269
+  GfsFunction * x, * y, * z;77,2269
+#define GFS_MAP_FUNCTION(80,2302
+#define GFS_IS_MAP_FUNCTION(83,2438
+typedef struct _GfsMapTransform         GfsMapTransform;90,2630
+struct _GfsMapTransform 92,2688
+  GfsMap parent;94,2732
+  GtsMatrix * m,95,2749
+  GtsMatrix * m, * im;95,2749
+  GtsVector translate,98,2790
+  GtsVector translate, rotate;98,2790
+#define GFS_MAP_TRANSFORM(101,2825
+#define GFS_IS_MAP_TRANSFORM(104,2964
+
+graphic.h,29
+#define __GRAPHIC_H__21,855
+
+init.h,72
+#define __INIT_H__21,852
+#define gfs_restore_fpe_for_function(37,1283
+
+mpi_boundary.c,472
+static void boundary_mpi_write 33,1044
+static void boundary_mpi_read 43,1439
+static guint tag_shift 78,2470
+#define TAG(80,2517
+#define MATCHING_TAG(81,2597
+FILE * mpi_debug 86,2764
+static void send 89,2797
+static void receive 132,4040
+static void synchronize 219,6475
+static void gfs_boundary_mpi_class_init 250,7268
+static void gfs_boundary_mpi_init 261,7585
+GfsBoundaryClass * gfs_boundary_mpi_class 291,8357
+GfsBoundaryMpi * gfs_boundary_mpi_new 312,8922
+
+wave.c,1415
+static double frequency 34,1047
+static double theta 41,1179
+static void group_velocity 46,1259
+static gdouble cell_E 54,1482
+static void set_group_velocity 71,2008
+  GfsAdvectionParams * p;78,2209
+  GfsVariable * div,79,2235
+  GfsVariable * div, * fv;79,2235
+} SolidFluxParams;80,2262
+static void solid_flux 82,2282
+  GfsVariable * F,95,2647
+  GfsVariable * F, * Fn,95,2647
+  GfsVariable * F, * Fn, * dF;95,2647
+  gdouble D[D96,2678
+} GSEData;97,2697
+static void compute_gradient 99,2709
+static void diffusion 104,2862
+static void copy_F 120,3339
+static void gse_alleviation_diffusion 125,3445
+static void redo_some_events 165,5138
+static void wave_run 171,5296
+static void wave_destroy 268,8930
+static void wave_read 275,9129
+static void wave_write 309,10274
+static void gfs_wave_class_init 322,10574
+static gdouble cell_hs 330,10811
+static gdouble cell_frequency 336,10975
+static gdouble cell_direction 341,11111
+static void wave_init 346,11271
+GfsSimulationClass * gfs_wave_class 374,12228
+static void gfs_init_wave_read 401,12835
+static void gfs_init_wave_write 419,13376
+static void gfs_init_wave_destroy 427,13618
+static void init_energy 435,13887
+static void scale_energy 443,14224
+static gboolean gfs_init_wave_event 457,14671
+static void gfs_init_wave_class_init 474,15393
+static void gfs_init_wave_init 482,15694
+GfsGenericInitClass * gfs_init_wave_class 488,15874
+
+mpi_boundary.h,379
+#define __MPI_BOUNDARY_H__21,860
+typedef struct _GfsBoundaryMpi         GfsBoundaryMpi;29,969
+struct _GfsBoundaryMpi 37,1117
+  GfsBoundaryPeriodic parent;39,1160
+  gint process,40,1190
+  gint process, id;40,1190
+  MPI_Comm comm;43,1227
+  MPI_Request request[request44,1244
+  guint nrequest;45,1270
+#define GFS_BOUNDARY_MPI(51,1342
+#define GFS_IS_BOUNDARY_MPI(54,1482
+
+advection.c,1003
+static gdouble transverse_term 27,939
+void gfs_cell_advected_face_values 58,1794
+void gfs_cell_non_advected_face_values 110,3530
+static gdouble interpolate_1D1 133,4109
+static gdouble interpolate_2D1 179,5298
+gdouble gfs_face_upwinded_value 264,7432
+void gfs_face_advection_flux 353,10069
+void gfs_face_velocity_advection_flux 395,11321
+void gfs_face_velocity_convective_flux 449,12937
+void gfs_face_advected_normal_velocity 510,14922
+void gfs_face_interpolated_normal_velocity 546,15883
+void gfs_face_reset_normal_velocity 578,16712
+gboolean gfs_cell_is_small 592,17041
+static void set_merged 611,17477
+void gfs_set_merged 674,18942
+static void add_merged 682,19147
+static void traverse_merged 715,20103
+static void traverse_non_merged 728,20433
+void gfs_domain_traverse_merged 752,21133
+void gfs_advection_update 781,22017
+void gfs_advection_params_write 874,24516
+void gfs_advection_params_init 919,26003
+static gdouble none 941,26574
+void gfs_advection_params_read 946,26654
+
+wave.h,661
+#define __WAVE_H__21,852
+#define GFS_WAVE_GAMMA 31,978
+#define GFS_WAVE_F0 32,1005
+typedef struct _GfsWave    GfsWave;34,1031
+struct _GfsWave 36,1068
+  GfsSimulation parent;38,1104
+  guint ik,39,1128
+  guint ik, ith;39,1128
+  void (* source)40,1145
+  guint nk,43,1199
+  guint nk, ntheta;43,1199
+  gdouble alpha_s;44,1219
+  GfsVariable *** F;45,1238
+#define GFS_WAVE(48,1263
+#define GFS_IS_WAVE(51,1380
+typedef struct _GfsInitWave         GfsInitWave;58,1557
+struct _GfsInitWave 60,1607
+  GfsGenericInit parent;62,1647
+  GfsFunction * d,65,1690
+  GfsFunction * d, * hs;65,1690
+#define GFS_INIT_WAVE(68,1719
+#define GFS_IS_INIT_WAVE(71,1846
+
+advection.h,1042
+#define __ADVECTION_H__21,857
+#define GFS_SMALL 30,982
+  GFS_GODUNOV,33,1020
+  GFS_NONE34,1035
+} GfsAdvectionScheme;35,1046
+  GFS_CENTERED_UPWINDING,38,1084
+  GFS_FACE_UPWINDING,39,1110
+  GFS_NO_UPWINDING,40,1132
+} GfsUpwinding;41,1152
+typedef struct _GfsAdvectionParams GfsAdvectionParams;43,1169
+void      (* GfsFaceAdvectionFluxFunc)45,1232
+typedef void (* GfsMergedTraverseFunc)47,1348
+struct _GfsAdvectionParams 50,1439
+  gdouble cfl,51,1468
+  gdouble cfl, dt;51,1468
+  GfsVariable * v,52,1487
+  GfsVariable * v, * fv,52,1487
+  GfsVariable * v, * fv, ** u,52,1487
+  GfsVariable * v, * fv, ** u, ** g;52,1487
+  GfsCenterGradient gradient;53,1524
+  gboolean use_centered_velocity;54,1554
+  GfsUpwinding upwinding;55,1588
+  GfsFaceAdvectionFluxFunc flux;56,1614
+  GfsAdvectionScheme scheme;57,1647
+  gboolean average,58,1676
+  gboolean average, gc;58,1676
+  GfsMergedTraverseFunc update;59,1700
+  guint moving_order;60,1732
+  GtsVector sink;61,1754
+  gboolean linear;62,1772
+  void (* diffusion_solve)63,1791
+
+boundary.c,5106
+static FttVector rpos[rpos32,1028
+static void symmetry 45,1323
+static void set_stencil_neighbor 53,1563
+static void symmetry_stencil 59,1764
+static void face_symmetry 64,1913
+static void bc_write 76,2357
+static void bc_read 82,2505
+static void gfs_bc_class_init 106,3064
+static void gfs_bc_init 112,3177
+GfsBcClass * gfs_bc_class 120,3504
+GfsBc * gfs_bc_new 149,4108
+static void bc_value_write 171,4518
+static void bc_value_read 180,4813
+static void bc_value_destroy 192,5197
+static void gfs_bc_value_class_init 198,5381
+static void gfs_bc_value_init 205,5553
+GfsBcClass * gfs_bc_value_class 210,5664
+static GfsBc * gfs_bc_value_new 231,6168
+static void dirichlet 253,6570
+static void dirichlet_vof 260,6752
+static void homogeneous_dirichlet 265,6894
+static void homogeneous_dirichlet_stencil 270,7025
+static void face_dirichlet 275,7137
+static void bc_dirichlet_read 281,7352
+static void gfs_bc_dirichlet_init 295,7800
+static void gfs_bc_dirichlet_class_init 303,8165
+GfsBcClass * gfs_bc_dirichlet_class 308,8270
+static void neumann 336,8909
+static void homogeneous_neumann 344,9115
+static void homogeneous_neumann_stencil 349,9242
+static void face_neumann 354,9351
+static void bc_neumann_read 362,9570
+static void gfs_bc_neumann_init 374,9925
+static void gfs_bc_neumann_class_init 382,10280
+GfsBcClass * gfs_bc_neumann_class 387,10381
+static void bc_angle_read 415,11010
+static void gfs_bc_angle_init 426,11371
+static void gfs_bc_angle_class_init 432,11539
+GfsBcClass * gfs_bc_angle_class 437,11636
+static void navier 464,12215
+static void face_navier 473,12545
+static void bc_navier_read 482,12939
+static void bc_navier_write 495,13440
+static void gfs_bc_navier_init 502,13669
+static void gfs_bc_navier_class_init 509,13937
+GfsBcClass * gfs_bc_navier_class 515,14070
+static void insert_bc 543,14696
+static void gfs_boundary_destroy 548,14815
+static void match 576,15861
+static void boundary_match 652,18233
+static void is_extra 687,19503
+static void write_extra 693,19613
+static void gfs_boundary_write 703,19839
+static gboolean boundary_read_extra_bc 720,20318
+static void gfs_boundary_read 776,21635
+static void gfs_boundary_class_init 792,22162
+static void gfs_boundary_init 801,22439
+GfsBoundaryClass * gfs_boundary_class 808,22666
+GfsBoundary * gfs_boundary_new 840,23449
+void gfs_boundary_update 866,24088
+void gfs_boundary_send 880,24431
+void gfs_boundary_receive 896,24857
+void gfs_boundary_synchronize 913,25293
+GfsBc * gfs_boundary_lookup_bc 928,25677
+void gfs_boundary_set_default_bc 954,26193
+void gfs_variable_set_default_bc 973,26623
+void gfs_boundary_add_bc 992,27030
+static GtsColor inflow_color 1019,27664
+static void inflow_constant_write 1026,27769
+static void inflow_constant_read 1035,28088
+static void gfs_boundary_inflow_constant_class_init 1061,28938
+static void gfs_boundary_inflow_constant_init 1068,29136
+GfsBoundaryInflowConstantClass * gfs_boundary_inflow_constant_class 1073,29285
+static GtsColor outflow_color 1101,30077
+static void outflow_read 1108,30184
+static void gfs_boundary_outflow_class_init 1130,30876
+GfsBoundaryOutflowClass * gfs_boundary_outflow_class 1136,31055
+static GtsColor gradient_color 1164,31721
+static void set_gradient_boundary 1171,31833
+static void gradient_read 1176,31934
+static void gfs_boundary_gradient_class_init 1190,32375
+GfsBoundaryClass * gfs_boundary_gradient_class 1196,32557
+static void boundary_periodic_destroy 1224,33226
+static void boundary_periodic_read 1235,33537
+static void center_periodic 1240,33652
+static void face_periodic 1251,34125
+static void boundary_size 1260,34495
+static void set_buffers_size 1265,34572
+static void boundary_tree 1276,34901
+static void periodic_match 1307,35883
+static void send 1316,36142
+static void center_update 1333,36783
+static void face_update 1341,37044
+static void match_ignore 1349,37298
+static void match_update 1370,37881
+static void receive 1414,39349
+static void synchronize 1444,40279
+static GtsColor periodic_color 1453,40497
+static void gfs_boundary_periodic_class_init 1460,40603
+static void gfs_boundary_periodic_init 1474,41115
+GfsBoundaryClass * gfs_boundary_periodic_class 1489,41642
+GfsBoundaryPeriodic * gfs_boundary_periodic_new 1519,42462
+static void center_periodic_rotate 1534,42846
+static void face_periodic_rotate 1554,43708
+void gfs_boundary_periodic_rotate 1581,44740
+GfsBoundaryPeriodic * gfs_boundary_periodic_rotate_new 1609,45601
+static void gfs_gedge_write 1631,46099
+static void gfs_gedge_read 1638,46355
+static void gfs_gedge_class_init 1664,47039
+static void gfs_gedge_init 1670,47168
+GfsGEdgeClass * gfs_gedge_class 1675,47266
+void gfs_gedge_link_boxes 1704,48003
+GfsGEdge * gfs_gedge_new 1765,50178
+static void gfs_box_destroy 1790,50726
+static void box_size 1814,51540
+static void gfs_box_write 1819,51610
+static void gfs_box_read 1853,52836
+static gfloat gfs_box_weight 2016,57865
+static void gfs_box_class_init 2032,58184
+static void gfs_box_init 2041,58450
+GfsBoxClass * gfs_box_class 2050,58572
+GfsBox * gfs_box_new 2071,59049
+
+solid.c,2204
+void gfs_cell_fluid 36,1104
+  GtsPoint p[p57,1517
+  GfsSegment s[s58,1534
+} CellFace;59,1553
+static void face_fractions 61,1566
+static void face_new 166,4358
+static gboolean solid_face_is_thin 184,4948
+gboolean gfs_set_2D_solid_fractions_from_surface 213,5552
+  gboolean destroy_solid;265,6646
+  FttCellCleanupFunc cleanup;266,6672
+  gpointer data;267,6702
+  GfsVariable * status;268,6719
+  guint thin;269,6743
+  GSList * solid_boxes;270,6757
+} InitSolidParams;271,6781
+static gboolean thin_cell_is_solid 273,6801
+static void deal_with_thin_cell 283,7011
+static void set_solid_fractions_from_surface 301,7475
+gboolean gfs_solid_is_thin 324,8167
+  GtsPoint p[p341,8513
+  GfsSegment s[s342,8530
+} CellCube;343,8550
+static void rotate 345,8563
+static void cell_size 368,8972
+static guint topology 385,9524
+static void cube_new 410,9992
+static void set_solid_fractions_from_surface 429,10565
+gboolean gfs_solid_is_thin 602,15094
+static gdouble solid_sa 628,15637
+void gfs_cell_init_solid_fractions_from_children 650,16113
+static void push_leaf 727,18000
+static void paint_leaf 751,18723
+static void paint_mixed_leaf 766,19082
+static void solid_fractions_from_children 802,20167
+static void foreach_box 836,21323
+static void match_fractions 843,21576
+guint gfs_init_solid_fractions_leaves 887,22985
+void gfs_init_solid_fractions_from_children 929,24445
+guint gfs_domain_init_solid_fractions 970,25694
+static gboolean check_area_fractions 990,26292
+static void check_solid_fractions 1115,29929
+gboolean gfs_cell_check_solid_fractions 1160,31192
+static void save_solid 1171,31499
+static void restore_solid 1177,31668
+static void set_status 1195,32184
+static void check_status 1202,32342
+void gfs_domain_init_fraction 1226,33104
+void gfs_cell_cm 1264,34187
+void gfs_solid_normal 1284,34690
+void gfs_face_ca 1312,35220
+static void outer_fractions_coarse_fine 1360,36493
+void gfs_solid_coarse_fine 1415,38061
+static void gfs_solid_read 1523,41163
+static void gfs_solid_write 1532,41421
+static void gfs_solid_destroy 1541,41698
+static void gfs_solid_class_init 1548,41891
+static void gfs_solid_init 1555,42058
+GfsEventClass * gfs_solid_class 1561,42246
+
+boundary.h,4241
+#define __BOUNDARY_H__21,856
+typedef struct _GfsBox                    GfsBox;30,977
+typedef struct _GfsBoxClass               GfsBoxClass;31,1027
+typedef struct _GfsBoundary               GfsBoundary;32,1082
+typedef struct _GfsBoundaryClass          GfsBoundaryClass;33,1137
+typedef struct _GfsBc         GfsBc;37,1219
+struct _GfsBc 39,1257
+  GtsObject parent;41,1291
+  GfsLinearProblem * lp;42,1311
+  GfsBoundary * b;45,1354
+  GfsVariable * v;46,1373
+  gboolean extra;47,1392
+  FttFaceTraverseFunc bc,48,1410
+  FttFaceTraverseFunc bc, homogeneous_bc;48,1410
+  FttFaceTraverseFunc homogeneous_bc_stencil;49,1452
+  FttFaceTraverseFunc face_bc;50,1498
+typedef struct _GfsBcClass    GfsBcClass;53,1533
+struct _GfsBcClass 55,1576
+  GtsObjectClass parent_class;57,1615
+#define GFS_BC(62,1670
+#define GFS_BC_CLASS(65,1813
+#define GFS_IS_BC(68,1940
+typedef struct _GfsBcValue         GfsBcValue;78,2192
+struct _GfsBcValue 80,2240
+  GfsBc parent;82,2279
+  GfsFunction * val;85,2313
+#define GFS_BC_VALUE(88,2338
+#define GFS_IS_BC_VALUE(91,2462
+#define GFS_IS_BC_DIRICHLET(98,2636
+#define GFS_IS_BC_NEUMANN(105,2820
+#define GFS_IS_BC_ANGLE(112,2996
+typedef struct _GfsBcNavier         GfsBcNavier;119,3167
+struct _GfsBcNavier 121,3217
+  GfsBcValue parent;123,3257
+  GfsFunction * lambda;126,3296
+#define GFS_BC_NAVIER(129,3324
+#define GFS_IS_BC_NAVIER(132,3451
+  GFS_BOUNDARY_CENTER_VARIABLE,140,3640
+  GFS_BOUNDARY_FACE_VARIABLE,141,3672
+  GFS_BOUNDARY_MATCH_VARIABLE,142,3702
+  GFS_BOUNDARY_VARIABLE_NUMBER143,3733
+} GfsBoundaryVariableType;144,3764
+struct _GfsBoundary 146,3792
+  GtsObject parent;148,3832
+  FttCell * root;150,3853
+  GfsBox * box;151,3871
+  FttDirection d;152,3887
+  guint depth;153,3905
+  GfsBc * default_bc;154,3920
+  gboolean changed;155,3942
+  GfsVariable * v;158,3980
+  GfsBoundaryVariableType type;159,3999
+  GHashTable * bc;160,4031
+struct _GfsBoundaryClass 163,4054
+  GtsObjectClass parent_class;164,4081
+  void (* match)166,4113
+  void (* send)167,4168
+  void (* receive)168,4223
+  void (* synchronize)171,4336
+  void (* update)172,4391
+#define GFS_BOUNDARY(175,4450
+#define GFS_BOUNDARY_CLASS(178,4579
+#define GFS_IS_BOUNDARY(181,4706
+typedef struct _GfsBoundaryInflowConstant         GfsBoundaryInflowConstant;205,5826
+typedef struct _GfsBoundaryInflowConstantClass    GfsBoundaryInflowConstantClass;206,5903
+struct _GfsBoundaryInflowConstant 208,5986
+  GfsBoundary parent;209,6022
+  GfsFunction * un;211,6045
+struct _GfsBoundaryInflowConstantClass 214,6069
+  GfsBoundaryClass parent_class;215,6110
+#define GFS_BOUNDARY_INFLOW_CONSTANT(218,6147
+#define GFS_BOUNDARY_INFLOW_CONSTANT_CLASS(221,6292
+#define GFS_IS_BOUNDARY_INFLOW_CONSTANT(224,6456
+typedef struct _GfsBoundaryOutflowClass    GfsBoundaryOutflowClass;231,6698
+struct _GfsBoundaryOutflowClass 233,6767
+  GfsBoundaryClass parent_class;234,6801
+#define GFS_BOUNDARY_OUTFLOW_CLASS(237,6838
+#define GFS_IS_BOUNDARY_OUTFLOW(240,6988
+#define GFS_IS_BOUNDARY_GRADIENT(247,7213
+typedef struct _GfsBoundaryPeriodic         GfsBoundaryPeriodic;254,7434
+struct _GfsBoundaryPeriodic 256,7500
+  GfsBoundary parent;258,7548
+  GfsBox * matching;260,7571
+  FttDirection d;261,7592
+  GArray * sndbuf,262,7610
+  GArray * sndbuf, * rcvbuf;262,7610
+  guint sndcount,263,7639
+  guint sndcount, rcvcount;263,7639
+  gdouble rotate;265,7668
+#define GFS_BOUNDARY_PERIODIC(268,7690
+#define GFS_IS_BOUNDARY_PERIODIC(271,7845
+typedef struct _GfsGEdge         GfsGEdge;291,8588
+typedef struct _GfsGEdgeClass    GfsGEdgeClass;292,8631
+struct _GfsGEdge 294,8680
+  GtsGEdge parent;295,8699
+  FttDirection d,297,8719
+  FttDirection d, rotate;297,8719
+struct _GfsGEdgeClass 300,8749
+  GtsGEdgeClass parent_class;301,8773
+#define GFS_GEDGE(304,8807
+#define GFS_GEDGE_CLASS(307,8925
+#define GFS_IS_GEDGE(310,9041
+struct _GfsBox 319,9375
+  GtsGNode parent;320,9392
+  FttCell * root;322,9412
+  GtsObject * neighbor[neighbor323,9430
+  guint id;324,9469
+  int pid;325,9481
+  gint size;326,9492
+struct _GfsBoxClass 329,9509
+  GtsGNodeClass parent_class;330,9531
+#define GFS_BOX(333,9565
+#define GFS_BOX_CLASS(336,9673
+#define GFS_IS_BOX(339,9791
+GfsDomain * gfs_box_domain 346,10035
+
+myc2d.h,46
+#define NOT_ZERO 1,0
+static void mycs(6,197
+
+variable.c,5606
+static void variable_init_domain 36,1103
+static void gfs_variable_read 43,1274
+static void gfs_variable_write 77,2339
+static void gfs_variable_destroy 84,2597
+static void gfs_variable_class_init 104,3175
+static void gfs_variable_init 111,3354
+GfsVariableClass * gfs_variable_class 120,3636
+GfsVariable * gfs_variable_new 150,4452
+GfsVariable * gfs_variable_from_name 183,5305
+GSList * gfs_variables_from_list 202,5938
+void gfs_variables_swap 234,6574
+void gfs_variable_set_vector 252,6972
+void gfs_variable_set_tensor 277,7554
+GfsVariable * gfs_variable_clone 299,8413
+static void boolean_fine_coarse 336,9538
+static void boolean_coarse_fine 351,9875
+static void variable_boolean_init 363,10154
+GfsVariableClass * gfs_variable_boolean_class 370,10332
+static void variable_tracer_read 398,10989
+static void variable_tracer_write 412,11440
+static void variable_tracer_class_init 420,11682
+static void variable_tracer_init 426,11829
+GfsVariableClass * gfs_variable_tracer_class 436,12157
+static void scale_residual 463,12811
+static gboolean variable_residual_event 470,13030
+static void variable_residual_class_init 480,13367
+static void variable_residual_init 485,13479
+GfsVariableClass * gfs_variable_residual_class 490,13603
+static void variable_filtered_read 518,14287
+static void variable_filtered_write 556,15386
+static void variable_filtered_event_half 563,15637
+static gboolean variable_filtered_event 578,16172
+static void variable_filtered_class_init 588,16462
+static void variable_filtered_init 596,16745
+GfsVariableClass * gfs_variable_filtered_class 602,16884
+static void unity 629,17554
+static void variable_diagonal 634,17639
+static gboolean variable_diagonal_event 662,18298
+static void variable_diagonal_class_init 684,19217
+GfsVariableClass * gfs_variable_diagonal_class 689,19348
+static void variable_function_destroy 717,20029
+static void variable_function_read 724,20239
+static void variable_function_write 737,20666
+static void variable_function_class_init 744,20878
+static void variable_function_coarse_fine 751,21077
+static void variable_function_init 763,21409
+GfsVariableClass * gfs_variable_function_class 769,21595
+static gdouble face_metric 799,22345
+static gdouble face_metric_inverse 811,22585
+static void init_mac_from_stream_function 818,22800
+static void variable_stream_function_coarse_fine 833,23516
+static void variable_stream_function_read 873,25130
+static void variable_stream_function_fine_coarse 900,26140
+static void init_streamfunction 924,27378
+static void init_streamfunction_from_variable 942,28043
+static gboolean variable_stream_function_event 957,28672
+static void variable_stream_function_class_init 976,29406
+static void variable_stream_function_init 982,29598
+GfsVariableClass * gfs_variable_stream_function_class 989,29774
+static void variable_poisson_read 1019,30567
+static void variable_poisson_write 1029,30856
+static void has_dirichlet 1037,31096
+  GfsFunction * f;1044,31252
+  GfsVariable * div;1045,31271
+} DivData;1046,31292
+static void rescale_div 1048,31304
+static gboolean variable_poisson_event 1055,31539
+static void variable_poisson_class_init 1088,32980
+static void variable_poisson_init 1095,33189
+GfsVariableClass * gfs_variable_poisson_class 1102,33400
+  GfsVariable * lap;1131,34121
+  GfsFunction * f;1132,34142
+  GfsVariable * u;1133,34161
+} LapData;1134,34180
+static void evaluate_function 1136,34192
+static void laplacian 1141,34317
+static gboolean variable_laplacian_event 1165,34899
+static void variable_laplacian_class_init 1187,35807
+static void variable_laplacian_init 1192,35940
+GfsVariableClass * gfs_variable_laplacian_class 1199,36108
+static void increment_age 1226,36762
+static gboolean variable_age_event 1231,36856
+static void variable_age_class_init 1243,37237
+static void none 1248,37358
+static void variable_age_init 1252,37416
+GfsVariableClass * gfs_variable_age_class 1258,37519
+static void variable_average_read 1286,38188
+static void variable_average_write 1308,38824
+static void average 1317,39104
+static gboolean variable_average_event 1383,41023
+static void variable_average_class_init 1398,41579
+static void variable_average_init 1405,41788
+GfsVariableClass * gfs_variable_average_class 1410,41914
+static FttComponent hydrostatic_component 1437,42567
+static void hydrostatic_pressure_read 1454,42972
+static gboolean hydrostatic_pressure_event 1470,43446
+static void hydrostatic_pressure_class_init 1479,43744
+static void hydrostatic_pressure_init 1485,43924
+GfsVariableClass * gfs_hydrostatic_pressure_class 1491,44083
+static void hydrostatic_pressure 1511,44631
+void gfs_hydrostatic_pressure_update 1570,46500
+static void gfs_constant_destroy 1593,47330
+static gdouble constant_func 1602,47638
+static void gfs_constant_read 1608,47772
+static void gfs_constant_write 1631,48413
+static void gfs_constant_class_init 1637,48611
+static void gfs_constant_init 1644,48795
+GfsEventClass * gfs_constant_class 1650,48890
+static void gfs_spatial_sum_destroy 1677,49519
+static void gfs_spatial_sum_write 1683,49714
+static void gfs_spatial_sum_read 1689,49911
+static void add 1697,50193
+static gboolean gfs_spatial_sum_event 1703,50378
+static void gfs_spatial_sum_class_init 1720,51031
+static void gfs_spatial_sum_init 1728,51280
+GfsEventClass * gfs_spatial_sum_class 1733,51403
+static void gfs_derived_variable_destroy 1761,52044
+static void gfs_derived_variable_class_init 1769,52303
+GtsObjectClass * gfs_derived_variable_class 1774,52426
+GfsDerivedVariable * gfs_derived_variable_from_name 1802,53145
+
+solid.h,308
+#define __SOLID_H__21,853
+  GFS_STATUS_UNDEFINED 33,997
+  GFS_STATUS_SOLID 34,1025
+  GFS_STATUS_FLUID 35,1053
+typedef struct _GfsSolid         GfsSolid;73,2675
+struct _GfsSolid 75,2719
+  GfsEvent parent;77,2756
+  GfsGenericSurface * s;80,2793
+#define GFS_SOLID(83,2822
+#define GFS_IS_SOLID(86,2938
+
+timestep.c,2639
+  GfsVariable ** g;32,1015
+  guint dimension;33,1035
+} GradientData;34,1054
+static void reset_cell_gradients 36,1071
+void gfs_reset_gradients 51,1415
+static void scale_cell_gradients 60,1695
+void gfs_scale_gradients 98,2689
+  GfsVariable * p,114,3164
+  GfsVariable * p, ** gv;114,3164
+  gdouble dt;115,3190
+} CorrectPar;116,3204
+static void correct_normal_velocity 118,3219
+void gfs_correct_normal_velocities 162,4608
+static void scale_divergence 181,5074
+  GfsSourceGeneric * s;190,5249
+  GfsVariable * v,191,5273
+  GfsVariable * v, ** g;191,5273
+  FttComponent c;192,5298
+  gdouble dt;193,5316
+} FaceSource;194,5330
+#define DIRICHLET_BOUNDARY 196,5345
+static void tag_dirichlet 198,5394
+static void ignore_dirichlet_boundaries 203,5483
+static void add_face_source 217,5959
+void gfs_velocity_face_sources 254,6968
+void gfs_update_gradients 305,8334
+  GfsVariable * v,325,8986
+  GfsVariable * v, * div;325,8986
+  gdouble L2;326,9012
+} SourceVolumePar;327,9026
+static void cell_volume_source 329,9049
+static void volume_sources 345,9459
+static void mac_projection 356,9829
+void gfs_mac_projection 460,13361
+static void correct 486,14085
+void gfs_correct_centered_velocities 510,14691
+void gfs_approximate_projection 560,16490
+static void save_face_values 598,17758
+static void face_values_init 605,17928
+static void restore_face_values 637,18935
+static void face_values_set 644,19108
+static void face_values_free 656,19622
+void gfs_predicted_face_velocities 681,20327
+void gfs_diffusion 735,22031
+static GfsSourceDiffusion * source_diffusion 790,23858
+static void add_pressure_gradient 809,24340
+static void add_sinking 814,24506
+void gfs_add_sinking_velocity 828,24878
+static void remove_sinking 839,25216
+void gfs_remove_sinking_velocity 853,25599
+static void variable_sources 864,25943
+static void variable_diffusion 915,27758
+static void copy_v_rhs 943,28785
+void gfs_centered_velocity_advection_diffusion 968,29682
+void gfs_tracer_advection_diffusion 1020,31227
+static void gfs_surface_generic_bc_destroy 1054,32238
+static void gfs_surface_generic_bc_read 1062,32479
+static void gfs_surface_generic_bc_write 1104,33846
+static void gfs_surface_generic_bc_class_init 1111,34170
+GfsSurfaceGenericBcClass * gfs_surface_generic_bc_class 1118,34456
+static void gfs_surface_bc_destroy 1146,35190
+static void gfs_surface_bc_read 1154,35467
+static void gfs_surface_bc_write 1178,36226
+static void gfs_surface_bc_bc 1192,36711
+static void gfs_surface_bc_class_init 1213,37439
+static void gfs_surface_bc_init 1221,37726
+GfsSurfaceGenericBcClass * gfs_surface_bc_class 1227,37913
+
+variable.h,3695
+#define __VARIABLE_H__21,861
+typedef struct _GfsSurfaceGenericBc        GfsSurfaceGenericBc;27,943
+typedef void (* GfsVariableFineCoarseFunc)34,1077
+struct _GfsVariable 36,1156
+  GfsEvent parent;38,1196
+  guint i;41,1233
+  FttComponent component;42,1244
+  GfsVariable * vector[vector43,1270
+  gchar * name,44,1309
+  gchar * name, * description;44,1309
+  gboolean centered;45,1340
+  GfsVariableFineCoarseFunc fine_coarse,46,1361
+  GfsVariableFineCoarseFunc fine_coarse, coarse_fine;46,1361
+  GtsContainer * sources;47,1415
+  GfsSurfaceGenericBc * surface_bc;48,1441
+  GfsBc * default_bc;49,1477
+  GfsDomain * domain;50,1499
+  FttCellCleanupFunc cleanup;51,1521
+  gdouble units;52,1551
+  GfsVariable * face[face53,1568
+  gboolean face_source;54,1596
+  gdouble orientation;55,1686
+  gboolean even;56,1749
+typedef struct _GfsVariableClass    GfsVariableClass;59,1814
+struct _GfsVariableClass 61,1869
+  GfsEventClass parent_class;63,1914
+#define GFS_VARIABLE(68,1966
+#define GFS_VARIABLE_CLASS(71,2091
+#define GFS_IS_VARIABLE(74,2214
+#define GFS_VALUE(76,2315
+#define               gfs_temporary_variable(83,2637
+#define GFS_IS_VARIABLE_BOOLEAN(100,3438
+typedef struct _GfsVariableTracer                GfsVariableTracer;107,3648
+struct _GfsVariableTracer 109,3717
+  GfsVariable parent;111,3763
+  GfsAdvectionParams advection;114,3803
+#define GFS_VARIABLE_TRACER(117,3839
+#define GFS_IS_VARIABLE_TRACER(120,3988
+#define GFS_IS_VARIABLE_RESIDUAL(127,4197
+typedef struct _GfsVariableFiltered                GfsVariableFiltered;134,4414
+struct _GfsVariableFiltered 136,4487
+  GfsVariable parent;138,4535
+  GfsVariable * v;141,4575
+  guint niter;142,4594
+#define GFS_VARIABLE_FILTERED(145,4613
+#define GFS_IS_VARIABLE_FILTERED(148,4768
+typedef struct _GfsVariableFunction                GfsVariableFunction;159,5075
+struct _GfsVariableFunction 161,5148
+  GfsVariable parent;163,5196
+  GfsFunction * f;166,5236
+#define GFS_VARIABLE_FUNCTION(169,5259
+#define GFS_IS_VARIABLE_FUNCTION(172,5414
+#define GFS_IS_VARIABLE_STREAM_FUNCTION(181,5647
+#define GFS_IS_VARIABLE_AGE(190,5899
+typedef struct _GfsVariableAverage                GfsVariableAverage;197,6098
+struct _GfsVariableAverage 199,6169
+  GfsVariableFunction parent;201,6216
+  FttComponent c;204,6264
+#define GFS_VARIABLE_AVERAGE(207,6286
+#define GFS_IS_VARIABLE_AVERAGE(210,6438
+struct _GfsDerivedVariable 217,6649
+  GtsObject parent;219,6696
+  gchar * name,222,6734
+  gchar * name, * description;222,6734
+  gpointer func,223,6765
+  gpointer func, data;223,6765
+#define GFS_DERIVED_VARIABLE(226,6792
+#define GFS_IS_DERIVED_VARIABLE(229,6940
+typedef struct _GfsConstant GfsConstant;238,7258
+struct _GfsConstant 241,7330
+  GfsEvent parent;243,7370
+  GfsDerivedVariable * derived;244,7389
+  gdouble val;247,7439
+#define GFS_CONSTANT(250,7492
+#define GFS_IS_CONSTANT(253,7617
+typedef struct _GfsSpatialSum         GfsSpatialSum;260,7807
+struct _GfsSpatialSum 263,7893
+  GfsConstant parent;265,7935
+  GfsFunction * v;268,7975
+#define GFS_SPATIAL_SUM(271,8026
+#define GFS_IS_SPATIAL_SUM(274,8159
+typedef struct _GfsVariablePoisson                GfsVariablePoisson;281,8349
+struct _GfsVariablePoisson 283,8420
+  GfsVariableFunction parent;285,8467
+  GfsMultilevelParams par;288,8515
+#define GFS_VARIABLE_POISSON(291,8546
+#define GFS_IS_VARIABLE_POISSON(294,8698
+#define GFS_IS_VARIABLE_LAPLACIAN(301,8911
+typedef struct _GfsHydrostaticPressure GfsHydrostaticPressure;308,9132
+struct _GfsHydrostaticPressure 311,9237
+  GfsVariable parent;313,9288
+  FttComponent c;314,9310
+#define GFS_HYDROSTATIC_PRESSURE(317,9332
+#define GFS_IS_HYDROSTATIC_PRESSURE(320,9492
+
+particle.c,211
+static gboolean gfs_particle_event 31,984
+static void gfs_particle_read 46,1417
+static void gfs_particle_write 81,2310
+static void gfs_particle_class_init 89,2603
+GfsEventClass * gfs_particle_class 96,2835
+
+timestep.h,710
+#define __TIMESTEP_H__21,856
+struct _GfsSurfaceGenericBc 102,3765
+  GtsObject parent;104,3813
+  GfsVariable * v;107,3851
+typedef struct _GfsSurfaceGenericBcClass    GfsSurfaceGenericBcClass;110,3876
+struct _GfsSurfaceGenericBcClass 112,3947
+  GtsObjectClass parent_class;114,4000
+  void (* bc)117,4049
+#define GFS_SURFACE_GENERIC_BC(120,4103
+#define GFS_SURFACE_GENERIC_BC_CLASS(123,4256
+#define GFS_IS_SURFACE_GENERIC_BC(126,4407
+typedef struct _GfsSurfaceBc         GfsSurfaceBc;133,4623
+struct _GfsSurfaceBc 135,4675
+  GfsSurfaceGenericBc parent;137,4716
+  GfsFunction * type,140,4764
+  GfsFunction * type, * val;140,4764
+#define GFS_SURFACE_BC(143,4797
+#define GFS_IS_SURFACE_BC(146,4927
+
+particle.h,271
+#define __PARTICLE_H__21,854
+typedef struct _GfsParticle GfsParticle;31,980
+struct _GfsParticle 33,1022
+  GfsEvent parent;34,1044
+  FttVector pos;35,1063
+  FttVector pos_old;36,1080
+  guint id;37,1101
+#define GFS_PARTICLE(40,1117
+#define GFS_IS_PARTICLE(43,1242
+
+metric.c,7712
+static gdouble face_metric_direction 36,1104
+static gdouble viscous_metric_implicit 45,1351
+static gdouble viscous_metric_explicit 66,2141
+static void advection_metric 96,3366
+static void set_default_metric 116,3993
+static void generic_metric_read 130,4448
+static void generic_metric_class_init 138,4669
+GfsEventClass * gfs_generic_metric_class 143,4774
+static void variable_metric_read 170,5392
+static void variable_metric_class_init 178,5615
+GfsVariableClass * gfs_variable_metric_class 183,5722
+#define USE_GSL 207,6299
+static double kpu_1d_l3[kpu_1d_l3215,6612
+static double kpu_2d_l2[kpu_2d_l2221,6721
+static double kpu_2d_l3[kpu_2d_l3229,6928
+static double kpu_2d_l4[kpu_2d_l4241,7349
+#define EPS 261,8103
+static double ru_rv 263,8121
+static double integration2d 279,8725
+  FttVector * r;298,9110
+  GfsMap * map;299,9127
+  gdouble v1,300,9143
+  gdouble v1, v2;300,9143
+} RuRvData;301,9161
+static double ru 303,9174
+static double rv 312,9429
+static double ru_gsl 324,9729
+static double rv_gsl 332,9884
+static gdouble integration 339,10007
+static double length_u 352,10452
+static double length_v 379,10962
+static double ru_rv_gsl 407,11499
+static double ru_rv_dv 415,11697
+static double area 427,11979
+static void metric_coarse_fine 444,12313
+static void metric_fine_coarse 492,14114
+static gdouble face_metric 514,14860
+static gdouble cell_metric 521,15072
+static void solid_metric 526,15216
+static gdouble scale_metric 532,15375
+static gdouble face_scale_metric 542,15758
+static void none 552,16108
+static void stored_metric_read 556,16166
+static void stored_metric_class_init 599,17669
+static void stored_metric_init 604,17772
+GfsVariableClass * gfs_stored_metric_class 609,17865
+#define GFS_IS_MAP_METRIC(633,18449
+static void gfs_map_metric_read 640,18639
+static void gfs_map_metric_write 645,18772
+static void gfs_map_metric_class_init 650,18902
+static void map_metric_inverse 656,19081
+static void gfs_map_metric_init 668,19481
+static GfsMapClass * gfs_map_metric_class 673,19572
+static void metric_write 695,20121
+static void metric_destroy 711,20537
+static void metric_read 722,20809
+static void metric_class_init 757,21645
+static void metric_init 764,21800
+GfsVariableClass * gfs_metric_class 772,22084
+#define N 797,22667
+static double A[A802,22768
+static double B[B811,23376
+static double A[A823,24036
+static double B[B832,24643
+static complex double WofZ 842,25228
+static complex double ZofW 851,25369
+#define I3 861,25524
+#define RA 863,25582
+static void fmap_xy2XYZ 873,25892
+static void cmap_xy2XYZ 928,27034
+static void fmap_XYZ2xy 977,28312
+static double angle_between_vectors 1018,29019
+static void plane_normal 1023,29158
+static double excess_of_quad 1034,29504
+static void gfs_map_cubed_read 1053,30042
+static void gfs_map_cubed_write 1058,30179
+static void gfs_map_cubed_class_init 1063,30313
+static int face_num 1071,30585
+static void map_cubed_transform 1087,30946
+static void map_cubed_inverse 1175,33166
+static void map_cubed_inverse_cell 1185,33506
+static double evaluate 1206,34138
+#define DELTA 1218,34422
+static void jacobian 1220,34442
+static void normalized_jacobian 1236,34873
+static void map_cubed_inverse_vector 1254,35266
+static void map_cubed_transform_vector 1278,35929
+static void gfs_map_cubed_init 1310,36845
+static GfsMapClass * gfs_map_cubed_class 1319,37124
+static gdouble cubed_face_scale_metric 1344,37706
+  double x,1354,38026
+  double x, y,1354,38026
+  double x, y, z;1354,38026
+  double x1,1355,38044
+  double x1, y1,1355,38044
+  double x1, y1, z1;1355,38044
+  double a;1356,38065
+} Point;1357,38077
+static void point_new 1359,38087
+static Point ** matrix_refine 1365,38214
+static Point ** matrix_from_cell 1388,39017
+static double matrix_a 1401,39386
+static double matrix_hx 1413,39718
+static double matrix_hy 1423,39967
+static void cubed_coarse_fine 1433,40216
+static void metric_cubed_write 1478,41940
+static void metric_cubed_read 1485,42178
+static void metric_cubed_class_init 1505,42723
+static void metric_cubed_init 1511,42861
+GfsVariableClass * gfs_metric_cubed_class 1516,42959
+typedef struct _GfsMapLonLat         GfsMapLonLat;1540,43535
+struct _GfsMapLonLat 1542,43587
+  GfsMap parent;1544,43628
+  gdouble r;1547,43663
+#define GFS_MAP_LONLAT(1550,43680
+#define GFS_IS_MAP_LONLAT(1553,43810
+static void gfs_map_lonlat_read 1558,43972
+static void gfs_map_lonlat_write 1563,44111
+static void gfs_map_lonlat_class_init 1568,44247
+static void map_lonlat_transform 1574,44426
+static void map_lonlat_inverse 1581,44648
+static void map_lonlat_inverse_cell 1590,44934
+static void gfs_map_lonlat_init 1616,45545
+static GfsMapClass * gfs_map_lonlat_class 1624,45756
+static void metric_lon_lat_write 1649,46355
+static gdouble lon_lat_face_metric 1655,46553
+static gdouble lon_lat_cell_metric 1664,46861
+static gdouble lon_lat_scale_metric 1669,47013
+static gdouble lon_lat_face_scale_metric 1676,47215
+static void lonlat_coarse_fine 1684,47455
+static void lonlat_fine_coarse 1712,48553
+static void metric_lon_lat_read 1731,49161
+static void metric_lon_lat_class_init 1774,50863
+static void metric_lon_lat_init 1780,51007
+GfsVariableClass * gfs_metric_lon_lat_class 1785,51079
+#define GFS_IS_MAP_STRETCH(1810,51712
+static void gfs_map_stretch_read 1815,51877
+static void gfs_map_stretch_write 1820,52018
+static void gfs_map_stretch_class_init 1825,52156
+static void map_stretch_transform 1831,52338
+static void map_stretch_inverse 1841,52610
+static void gfs_map_stretch_init 1851,52880
+static GfsMapClass * gfs_map_stretch_class 1857,53015
+static void metric_stretch_write 1882,53606
+static gdouble stretch_face_metric 1892,53900
+static gdouble stretch_cell_metric 1909,54319
+static void stretch_solid_metric 1919,54549
+static gdouble stretch_scale_metric 1933,54904
+static gdouble stretch_face_scale_metric 1938,55071
+static void metric_stretch_read 1944,55254
+static void metric_stretch_class_init 1980,56485
+static void metric_stretch_init 1986,56629
+GfsEventClass * gfs_metric_stretch_class 1992,56747
+#define GFS_IS_MAP_CUBED1(2020,57507
+static void gfs_map_cubed1_read 2027,57697
+static void gfs_map_cubed1_write 2032,57836
+static void gfs_map_cubed1_class_init 2037,57972
+static void map_cubed1_inverse 2043,58151
+static void gfs_map_cubed1_init 2051,58372
+static GfsMapClass * gfs_map_cubed1_class 2056,58461
+static void metric_cubed1_init 2078,58979
+GfsVariableClass * gfs_metric_cubed1_class 2083,59079
+#define GFS_IS_MAP_VARIABLE(2105,59607
+static void gfs_map_variable_read 2112,59805
+static void gfs_map_variable_write 2117,59948
+static void gfs_map_variable_class_init 2122,60088
+static void map_variable_inverse 2128,60273
+static void gfs_map_variable_init 2143,60835
+static GfsMapClass * gfs_map_variable_class 2148,60928
+static void metric_variable_coarse_fine 2170,61456
+static void metric_variable_read 2187,61874
+  GfsMetricVariable * m;2208,62557
+  gdouble max;2209,62582
+  GfsVariable * div;2210,62597
+} UpdateData;2211,62618
+static void update_metric 2213,62633
+static gboolean metric_variable_event 2249,64156
+static void metric_variable_class_init 2263,64722
+static void metric_variable_init 2269,64887
+GfsVariableClass * gfs_metric_variable_class 2276,65057
+static gdouble conformal_face_scale_metric 2298,65617
+static void metric_laplace_read 2306,65861
+static void metric_laplace_write 2333,66656
+static void cartesian_coordinates 2340,66935
+static void spherical_laplacian 2351,67216
+static gboolean metric_laplace_event 2357,67405
+static void metric_laplace_class_init 2415,70040
+GfsVariableClass * gfs_metric_laplace_class 2422,70241
+
+balance.c,915
+static void find_neighbors 34,1043
+static GArray * neighboring_processors 50,1495
+static void count 58,1739
+#define NITERMAX 63,1798
+#define TOL 64,1819
+  guint * pid;67,1855
+  gdouble * flow;68,1897
+  guint n;69,1940
+} BalancingFlow;70,1985
+static BalancingFlow * balancing_flow_new 77,2176
+static void balancing_flow_destroy 139,4294
+static void reset_box_size 146,4407
+  GfsBox * box;152,4488
+  gint dest,153,4504
+  gint dest, flow,153,4504
+  gint dest, flow, min,153,4504
+  gint dest, flow, min, neighboring;153,4504
+} BoxData;154,4541
+static void select_neighbouring_box 156,4553
+static void get_pid 182,5333
+static void update_box_pid 188,5507
+static void gfs_event_balance_write 201,5893
+static void gfs_event_balance_read 212,6205
+static gboolean gfs_event_balance_event 226,6639
+static void gfs_event_balance_class_init 318,10072
+GfsEventClass * gfs_event_balance_class 325,10322
+
+cartesian.c,441
+static void cartesian_grid_read 31,1018
+static void cartesian_grid_write 108,3216
+static void cartesian_grid_destroy 135,3948
+static void cartesian_grid_class_init 156,4414
+GtsObjectClass * gfs_cartesian_grid_class 164,4721
+GfsCartesianGrid * gfs_cartesian_grid_new 184,5216
+static void slice 193,5411
+static gint lookup 205,5649
+gboolean gfs_cartesian_grid_interpolate 229,6191
+GfsCartesianGrid * gfs_cartesian_grid_read 268,7231
+
+metric.h,1989
+#define __METRIC_H__21,854
+#define GFS_IS_GENERIC_METRIC(31,984
+#define GFS_IS_VARIABLE_METRIC(38,1184
+typedef struct _GfsStoredMetric GfsStoredMetric;45,1388
+struct _GfsStoredMetric 47,1438
+  GfsVariable parent;49,1482
+  GfsMap * map;50,1504
+  GfsVariable * h[h53,1538
+  GfsVariable * h[4], * e;53,1538
+  GfsMapClass * map_class;54,1565
+#define GFS_STORED_METRIC(57,1596
+#define GFS_IS_STORED_METRIC(60,1739
+typedef struct _GfsMetric GfsMetric;67,1931
+struct _GfsMetric 69,1969
+  GfsStoredMetric parent;71,2007
+  GfsFunction * x,74,2051
+  GfsFunction * x, * y,74,2051
+  GfsFunction * x, * y, * z;74,2051
+#define GFS_METRIC(77,2084
+#define GFS_IS_METRIC(80,2207
+typedef struct _GfsMetricCubed GfsMetricCubed;87,2383
+struct _GfsMetricCubed 89,2431
+  GfsStoredMetric parent;91,2474
+  gint level;94,2518
+#define GFS_METRIC_CUBED(97,2536
+#define GFS_IS_METRIC_CUBED(100,2676
+typedef struct _GfsMetricLonLat GfsMetricLonLat;107,2871
+struct _GfsMetricLonLat 109,2921
+  GfsVariable parent;111,2965
+  GfsVariable * h2,114,3005
+  GfsVariable * h2, * h3;114,3005
+  gdouble r;115,3031
+#define GFS_METRIC_LON_LAT(118,3048
+#define GFS_IS_METRIC_LON_LAT(121,3193
+typedef struct _GfsMetricStretch GfsMetricStretch;128,3395
+struct _GfsMetricStretch 130,3447
+  GfsEvent parent;132,3492
+  gdouble sx,135,3529
+  gdouble sx, sy,135,3529
+  gdouble sx, sy, sz;135,3529
+#define GFS_METRIC_STRETCH(138,3555
+#define GFS_IS_METRIC_STRETCH(141,3701
+typedef struct _GfsMetricVariable GfsMetricVariable;152,3985
+struct _GfsMetricVariable 154,4039
+  GfsStoredMetric parent;156,4085
+  GfsVariable * x[x159,4129
+#define GFS_METRIC_VARIABLE(162,4155
+#define GFS_IS_METRIC_VARIABLE(165,4304
+typedef struct _GfsMetricLaplace GfsMetricLaplace;172,4509
+struct _GfsMetricLaplace 174,4561
+  GfsMetricVariable parent;176,4606
+  gboolean conformal,179,4652
+  gboolean conformal, spherical;179,4652
+#define GFS_METRIC_LAPLACE(182,4689
+#define GFS_IS_METRIC_LAPLACE(185,4835
+
+balance.h,249
+#define __BALANCE_H__21,860
+typedef struct _GfsEventBalance         GfsEventBalance;31,992
+struct _GfsEventBalance 33,1050
+  GfsEvent parent;34,1076
+  gdouble max;36,1096
+#define GFS_EVENT_BALANCE(39,1115
+#define GFS_IS_EVENT_BALANCE(42,1254
+
+cartesian.h,343
+#define __CARTESIAN_H__21,857
+typedef struct _GfsCartesianGrid      GfsCartesianGrid;31,990
+struct _GfsCartesianGrid 33,1047
+  GtsObject parent;35,1092
+  guint N;36,1112
+  guint * n;37,1156
+  gdouble ** x;38,1202
+  gdouble * v;39,1260
+  gchar ** name;40,1288
+#define GFS_CARTESIAN_GRID(47,1397
+#define GFS_IS_CARTESIAN_GRID(50,1534
+
+fluid.c,4851
+FttCellFace gfs_cell_face 42,1234
+typedef struct _Gradient Gradient;54,1507
+struct _Gradient 57,1590
+  gdouble a,58,1609
+  gdouble a, b,58,1609
+  gdouble a, b, c;58,1609
+static gdouble average_neighbor_value 64,1735
+static void average_neighbor_value_stencil 95,2652
+static GfsGradient interpolate_1D2 126,3402
+static GfsGradient interpolate_1D1 171,4342
+static void interpolate_1D1_stencil 193,4746
+static GfsGradient interpolate_2D1 214,5202
+static void interpolate_2D1_stencil 247,5877
+static gint perpendicular[perpendicular265,6278
+static gint perpendicular[perpendicular271,6438
+static Gradient gradient_fine_coarse 282,6987
+#define REFINE_CORNER(311,7615
+void ftt_cell_refine_corners 315,7818
+gdouble gfs_neighbor_value 364,8995
+static void neighbor_value_stencil 398,9924
+gdouble gfs_center_gradient 434,10875
+void gfs_center_gradient_stencil 486,12179
+gdouble gfs_center_van_leer_gradient 522,13044
+static gdouble generic_limiter 563,14136
+static gdouble minmod_limiter 570,14295
+static gdouble superbee_limiter 575,14376
+static gdouble sweby_limiter 580,14459
+static gdouble center_limited_gradient 585,14540
+gdouble gfs_center_minmod_gradient 628,15569
+gdouble gfs_center_superbee_gradient 650,16143
+gdouble gfs_center_sweby_gradient 672,16732
+gdouble gfs_center_regular_gradient 694,17320
+gdouble gfs_center_regular_2nd_derivative 743,18894
+void gfs_face_gradient 778,20111
+static void face_weighted_gradient 833,21562
+void gfs_face_weighted_gradient 905,23522
+void gfs_face_weighted_gradient_2D 913,23708
+static void fullest_directions 921,23894
+static FttCell * cell_corner_neighbor1 935,24312
+# define N_CELLS 967,25086
+# define N_CELLS 969,25121
+static gboolean inverse 972,25157
+#define SWAP(1002,26241
+static void draw_cell 1049,27356
+static void output_error_mesh 1124,29140
+static gboolean face_bilinear 1138,29540
+static gboolean mixed_face_gradient 1251,32846
+static void face_cm_gradient 1333,34901
+void gfs_face_cm_gradient 1417,37328
+void gfs_face_cm_weighted_gradient 1444,38182
+static gboolean cell_bilinear 1455,38433
+void gfs_cell_dirichlet_gradient 1494,39693
+void gfs_mixed_cell_gradient 1532,40580
+gdouble gfs_mixed_cell_interpolate 1587,42116
+gdouble gfs_cell_dirichlet_gradient_flux 1644,43768
+static void gfs_cell_dirichlet_gradient_stencil 1661,44171
+gdouble gfs_cell_dirichlet_gradient_flux_stencil 1703,45480
+gdouble gfs_cell_dirichlet_value 1732,46325
+void gfs_shear_strain_rate_tensor 1782,47751
+gdouble gfs_2nd_principal_invariant 1817,48670
+void gfs_get_from_below_intensive 1843,49385
+void gfs_cell_coarse_fine 1876,50280
+void gfs_cell_cleanup 1951,52788
+void gfs_cell_reset 1980,53414
+static void add_stats 1988,53569
+GtsRange gfs_stats_variable 2009,54199
+static void add_norm 2030,54649
+GfsNorm gfs_norm_variable 2050,55278
+void gfs_norm_init 2077,55791
+void gfs_norm_reset 2092,56026
+void gfs_norm_add 2109,56293
+void gfs_norm_update 2130,56695
+gdouble gfs_face_interpolated_value 2156,57295
+gdouble gfs_face_interpolated_value_generic 2202,58477
+gdouble gfs_face_weighted_interpolated_value 2238,59822
+void gfs_normal_divergence 2280,61011
+void gfs_normal_divergence_2D 2304,61646
+gdouble gfs_divergence 2327,62238
+gdouble gfs_vorticity 2356,63036
+gdouble gfs_vector_norm2 2407,64986
+gdouble gfs_vector_norm 2428,65429
+gdouble gfs_vector_lambda2 2443,65808
+void gfs_pressure_force 2476,66773
+static void cell_traverse_mixed 2503,67328
+void gfs_cell_traverse_mixed 2546,68743
+static FttDirection corner[corner2559,69056
+static FttDirection corner[corner2566,69233
+void gfs_cell_corner_values 2587,69939
+gdouble gfs_interpolate_from_corners 2610,70581
+gdouble gfs_interpolate 2667,72273
+void gfs_interpolate_stencil 2690,72827
+gdouble gfs_center_curvature 2719,73512
+gdouble gfs_streamline_curvature 2755,74322
+static FttCell * cell_corner_neighbor 2783,74883
+static void interpolator_merge 2818,75796
+static void interpolator_scale 2842,76209
+static void t_junction_interpolator 2849,76336
+static gboolean do_path 2895,77849
+static gdouble distance 2953,79566
+void gfs_cell_corner_interpolator 2985,80452
+gdouble gfs_cell_corner_value 3051,82108
+GfsStencil * gfs_stencil_new 3085,82918
+void gfs_stencil_add_element 3106,83512
+void gfs_stencil_destroy 3142,84392
+static void get_average_neighbor_value_stencil 3150,84578
+static GfsGradient get_interpolate_1D1_stencil 3191,85804
+static GfsGradient get_interpolate_2D1_stencil 3219,86300
+static Gradient gradient_fine_coarse_stencil 3252,86996
+static void face_weighted_gradient_stencil 3284,87804
+void gfs_face_weighted_gradient_stencil 3354,89628
+static gboolean mixed_face_gradient_stencil 3363,89885
+static void face_cm_gradient_stencil 3447,92086
+void gfs_face_cm_weighted_gradient_stencil 3531,94919
+void gfs_cm_gradient 3556,95559
+
+fluid.h,2743
+#define __FLUID_H__21,853
+typedef struct _GfsVariable               GfsVariable;31,968
+typedef struct _GfsDerivedVariable        GfsDerivedVariable;32,1023
+typedef struct _GfsDomain                 GfsDomain;33,1085
+typedef struct _GfsStateVector     GfsStateVector;35,1139
+typedef struct _GfsSolidVector     GfsSolidVector;36,1190
+typedef struct _GfsFaceStateVector GfsFaceStateVector;37,1241
+struct _GfsFaceStateVector 39,1297
+  gdouble un;40,1326
+  gdouble v;41,1340
+struct _GfsStateVector 44,1357
+  GfsFaceStateVector f[f46,1415
+  GfsSolidVector * solid;49,1480
+  gdouble place_holder;51,1507
+struct _GfsSolidVector 54,1535
+  gdouble s[s55,1560
+  gdouble a,56,1588
+  gdouble a, fv;56,1588
+  FttCell * merged;57,1605
+  FttVector cm,58,1625
+  FttVector cm, ca,58,1625
+  FttVector cm, ca, v;58,1625
+  GFS_FLAG_USED 62,1667
+  GFS_FLAG_USED =              1 <<  FTT_FLAG_USER,62,1667
+  GFS_FLAG_BOUNDARY 63,1719
+  GFS_FLAG_BOUNDARY          = 1 << (FTT_FLAG_USER 63,1719
+  GFS_FLAG_DIRICHLET 64,1776
+  GFS_FLAG_DIRICHLET         = 1 << (FTT_FLAG_USER 64,1776
+  GFS_FLAG_GRADIENT_BOUNDARY 65,1833
+  GFS_FLAG_GRADIENT_BOUNDARY = 1 << (FTT_FLAG_USER 65,1833
+  GFS_FLAG_PERMANENT 66,1890
+  GFS_FLAG_PERMANENT         = 1 << (FTT_FLAG_USER 66,1890
+  GFS_FLAG_THIN 67,1947
+  GFS_FLAG_THIN              = 1 << (FTT_FLAG_USER 67,1947
+  GFS_FLAG_USER 68,2004
+  GFS_FLAG_USER =                    FTT_FLAG_USER 68,2004
+} GfsFlags;69,2087
+#define GFS_STATE(71,2100
+#define GFS_VALUEI(72,2172
+#define GFS_FACE_NORMAL_VELOCITY(74,2252
+#define GFS_FACE_NORMAL_VELOCITY_LEFT(76,2332
+#define GFS_FACE_NORMAL_VELOCITY_RIGHT(78,2417
+#define GFS_FACE_FRACTION(81,2533
+#define GFS_FACE_FRACTION_LEFT(83,2672
+#define GFS_FACE_FRACTION_RIGHT(84,2729
+#define GFS_IS_FLUID(87,2894
+#define GFS_IS_MIXED(89,3012
+#define GFS_CELL_IS_BOUNDARY(91,3130
+#define GFS_CELL_IS_PERMANENT(92,3208
+#define GFS_CELL_IS_GRADIENT_BOUNDARY(93,3288
+typedef gdouble    (* GfsCenterGradient)114,4336
+typedef struct _GfsGradient GfsGradient;145,5530
+struct _GfsGradient 147,5572
+  gdouble a,148,5594
+  gdouble a, b;148,5594
+typedef struct _GfsNorm GfsNorm;212,8078
+struct _GfsNorm 214,8112
+  gdouble bias,215,8130
+  gdouble bias, first,215,8130
+  gdouble bias, first, second,215,8130
+  gdouble bias, first, second, infty,215,8130
+  gdouble bias, first, second, infty, w;215,8130
+  FttCell * c[c263,9999
+  gdouble w[w264,10017
+  FttCell * c[c266,10049
+  gdouble w[w267,10068
+  guint n;269,10101
+} GfsInterpolator;270,10114
+typedef struct _GfsLinearProblem GfsLinearProblem;284,10520
+typedef struct _GfsStencil GfsStencil;285,10571
+struct _GfsStencil 287,10611
+  GArray * coeff;288,10632
+  GArray * id;289,10664
+
+refine.c,2010
+static gboolean refine_maxlevel 34,1064
+static void refine_box 39,1214
+static void gfs_refine_refine 46,1430
+static void gfs_refine_destroy 54,1691
+static void gfs_refine_write 60,1878
+static void gfs_refine_read 66,2050
+static void gfs_refine_class_init 101,3039
+static void gfs_refine_init 110,3306
+GfsRefineClass * gfs_refine_class 115,3427
+GfsRefine * gfs_refine_new 137,3952
+typedef struct _GfsRefineSolid           GfsRefineSolid;153,4223
+struct _GfsRefineSolid 155,4281
+  GfsRefine parent;156,4306
+  GfsDerivedVariable * v;158,4327
+#define GFS_REFINE_SOLID(161,4359
+static void refine_solid_destroy 165,4500
+  GtsSurface * s;174,4774
+  gdouble kappa;175,4792
+} KappaData;176,4809
+static void max_kappa 178,4823
+static gdouble solid_curvature 189,5070
+static void refine_solid_read 199,5385
+  GfsRefine * refine;214,5919
+  GfsDomain * domain;215,5941
+  GfsGenericSurface * surface;216,5963
+} RefineCut;217,5994
+static void refine_cut_cell 219,6008
+static void refine_implicit_cell 228,6392
+static void gfs_refine_solid_refine 235,6708
+static void gfs_refine_solid_class_init 259,7451
+GfsRefineClass * gfs_refine_solid_class 266,7678
+static void refine_surface_destroy 294,8321
+static void refine_surface_write 303,8572
+static void refine_surface_read 309,8814
+static void gfs_refine_surface_refine 318,9101
+static void gfs_refine_surface_class_init 345,10006
+static void refine_surface_init 354,10300
+GfsRefineClass * gfs_refine_surface_class 359,10455
+static void refine_distance_destroy 387,11156
+static gdouble cell_distance 398,11517
+static void refine_distance_read 414,11962
+static void gfs_refine_distance_class_init 438,12678
+GfsRefineClass * gfs_refine_distance_class 446,12909
+static void refine_height_destroy 474,13549
+static gdouble interpolated_value 481,13789
+static gdouble cell_height 496,14123
+static void refine_height_read 506,14379
+static void gfs_refine_height_class_init 527,15008
+GfsRefineClass * gfs_refine_height_class 535,15233
+
+refine.h,1064
+#define __REFINE_H__21,854
+# define GFS_DIAGONAL 30,970
+# define GFS_DIAGONAL 32,1022
+typedef struct _GfsRefine             GfsRefine;37,1101
+typedef struct _GfsRefineClass        GfsRefineClass;38,1150
+struct _GfsRefine 40,1205
+  GtsSListContainee parent;41,1225
+  GfsFunction * maxlevel;43,1254
+struct _GfsRefineClass 46,1284
+  GtsSListContaineeClass parent_class;47,1309
+  void (* refine)49,1349
+#define GFS_REFINE(52,1421
+#define GFS_REFINE_CLASS(55,1544
+#define GFS_IS_REFINE(58,1665
+#define GFS_IS_REFINE_SOLID(66,1905
+typedef struct _GfsRefineSurface         GfsRefineSurface;73,2104
+struct _GfsRefineSurface 75,2164
+  GfsRefine parent;76,2191
+  GfsGenericSurface * surface;78,2212
+#define GFS_REFINE_SURFACE(81,2247
+#define GFS_IS_REFINE_SURFACE(84,2393
+typedef struct _GfsRefineDistance         GfsRefineDistance;91,2599
+struct _GfsRefineDistance 93,2661
+  GfsRefineSurface parent;94,2689
+  GNode * stree;96,2717
+#define GFS_REFINE_DISTANCE(99,2738
+#define GFS_IS_REFINE_DISTANCE(102,2885
+#define GFS_IS_REFINE_HEIGHT(109,3091
+
+vof.c,5944
+#define THRESHOLD(30,1008
+gdouble gfs_line_area 40,1247
+gdouble gfs_line_alpha 93,2126
+#define EPS 121,2661
+void gfs_line_center 133,2936
+gdouble gfs_line_area_center 210,4242
+gdouble gfs_plane_volume 288,5524
+gdouble gfs_plane_alpha 344,6986
+void gfs_plane_center 427,8889
+gdouble gfs_plane_area_center 547,11265
+void gfs_youngs_gradient 672,13764
+gdouble gfs_vof_plane_interpolate 717,15296
+gdouble gfs_vof_interpolate 764,16550
+# define F(792,17193
+# define F(794,17225
+static void stencil 797,17262
+static void youngs_normal 850,18794
+static void myc_normal 892,20164
+static void vof_plane 903,20338
+static void no_coarse_fine 936,21190
+static void allocate_normal_alpha 938,21256
+static void variable_tracer_vof_update 962,22202
+static gboolean variable_tracer_vof_event 987,23088
+static void variable_tracer_vof_destroy 999,23472
+static void variable_tracer_vof_read 1014,23913
+static void variable_tracer_vof_class_init 1029,24356
+static void vof_coarse_fine 1037,24659
+static void vof_fine_coarse 1097,26359
+static void variable_tracer_vof_init 1163,28104
+GfsVariableTracerVOFClass * gfs_variable_tracer_vof_class 1175,28539
+  GfsAdvectionParams * par,1196,29131
+  GfsAdvectionParams * par, vpar;1196,29131
+  GfsVariable * u,1197,29165
+  GfsVariable * u, * du[du1197,29165
+  GfsVariable * u, * du[FTT_DIMENSION - 1], * vof;1197,29165
+  FttComponent c;1198,29216
+  GfsDomain * domain;1199,29234
+  guint depth,1200,29256
+  guint depth, too_coarse;1200,29256
+} VofParms;1201,29283
+static gdouble plane_volume_shifted 1203,29296
+static gdouble fine_fraction 1214,29567
+static gdouble coarse_fraction 1238,30223
+#define TOO_COARSE(1269,31196
+static void face_too_coarse 1273,31381
+static void vof_cell_fine_init 1292,31917
+static void vof_cell_fine_init_with_streamfunction 1404,35634
+static void refine_too_coarse 1417,35978
+static void fix_too_coarse 1431,36440
+static void concentration_face_values 1464,37619
+static void vof_flux 1476,38116
+static void initialize_dV 1577,41303
+static void reset_fluxes 1582,41398
+static void f_times_dV 1593,41768
+static void concentration_times_dV 1598,41889
+static void f_over_dV 1603,42047
+static void concentration_over_dV 1610,42297
+static void per_vof_volume 1619,42569
+static void per_cell_volume 1626,42819
+void gfs_tracer_vof_advection 1640,43202
+static gdouble face_value 1732,46887
+gdouble gfs_vof_face_value 1761,47571
+guint gfs_vof_facet 1822,49452
+gdouble gfs_vof_facet_distance2 1903,51457
+gdouble gfs_vof_center 1970,53521
+static gdouble fraction 1991,54168
+#define NMAX 2002,54473
+#define ADD_H(2004,54490
+#define SIGN(2005,54524
+static gdouble local_height 2007,54563
+static gboolean curvature_along_direction 2057,55971
+#define PARABOLA_FIT_CENTER_WEIGHT 2170,58929
+#define PARABOLA_SIMPLER 2171,58967
+  GtsVector o;2174,59012
+  GtsVector m;2176,59073
+  GtsMatrix * M;2177,59088
+  GtsVector rhs,2178,59105
+  GtsVector rhs, a;2178,59105
+  GtsMatrix * M;2181,59203
+  GtsVector rhs,2182,59220
+  GtsVector rhs, a;2182,59220
+  gdouble ** M,2184,59313
+  gdouble ** M, rhs[rhs2184,59313
+  gdouble ** M, rhs[6], a[a2184,59313
+  GtsVector t[t2186,59351
+} ParabolaFit;2188,59385
+static void parabola_fit_init 2190,59401
+static void parabola_fit_add 2234,60803
+static void parabola_fit_solve 2276,62292
+static gdouble parabola_fit_curvature 2327,63963
+static void parabola_fit_axi_curvature 2366,64869
+static void parabola_fit_destroy 2377,65242
+static void add_vof_center 2386,65399
+static void fit_from_fractions 2404,66014
+gdouble gfs_fit_curvature 2443,67226
+# define NI 2480,68268
+# define NI 2482,68288
+static void orientation 2485,68310
+static guint independent_positions 2499,68666
+gdouble gfs_height_curvature 2537,69718
+static gdouble neighboring_column 2603,71743
+static void curvature_from_h 2639,72778
+gboolean gfs_curvature_along_direction 2684,74068
+static gboolean curvature_along_direction_new 2721,75158
+gdouble gfs_height_curvature_new 2791,77566
+gdouble gfs_vof_correctness 2863,79714
+static void variable_vof_concentration_read 2897,81145
+static void variable_vof_concentration_write 2923,82064
+static void variable_vof_concentration_class_init 2929,82321
+static void variable_vof_concentration_init 2935,82501
+GfsVariableClass * gfs_variable_vof_concentration_class 2942,82735
+  GfsVariable * f;2967,83432
+  GfsVariable * hb,2968,83473
+  GfsVariable * hb, * ht;2968,83473
+  GfsBc * angle;2969,83535
+  FttComponent c;2970,83575
+  FttDirection d;2971,83609
+} HFState;2972,83627
+static gboolean is_interfacial 2974,83639
+static void undefined_height 2980,83778
+#define HMAX 2986,83925
+#define SIGN(2987,83940
+#define BOUNDARY_HIT 2988,83978
+static gint children_half_height 2990,84010
+static gint half_height 3023,84744
+#define DMAX 3051,85495
+static void height_propagation 3053,85512
+static void height 3071,86146
+static GfsVariable * boundary_hit 3139,88067
+static void height_propagation_from_boundary 3148,88352
+static void height_periodic_bc 3170,89157
+#define SLOPE_MAX 3207,90498
+#define THETA_MIN 3208,90529
+static gdouble contact_angle_bc 3210,90569
+static void height_contact_normal_bc 3221,90868
+static void contact_angle_height 3279,93242
+static void height_contact_tangential_bc 3314,94712
+static void box_periodic_bc 3322,94921
+static void box_contact_bc 3330,95237
+static void remaining_boundary_height_undefined 3347,95925
+static gboolean height_normal 3354,96101
+static void vof_height_plane 3392,97254
+static void variable_tracer_vof_height_update 3426,98148
+static void variable_tracer_vof_height_destroy 3478,100276
+static void undefined_coarse_fine 3493,100753
+static void variable_tracer_vof_height_read 3503,101000
+static void variable_tracer_vof_height_class_init 3534,102288
+GfsVariableTracerVOFClass * gfs_variable_tracer_vof_height_class 3541,102557
+GfsVariable * gfs_closest_height 3572,103495
+
+moving.c,2982
+#define OLD_SOLID(39,1185
+  GfsDomain * domain;42,1279
+  gdouble dt;43,1301
+  FttComponent c;44,1315
+  GfsVariable * div;45,1333
+  GfsVariable * v;46,1354
+} DivergenceData;47,1373
+static void numbered_vertex_read 53,1447
+static void numbered_vertex_class_init 63,1697
+GtsVertexClass * gfs_numbered_vertex_class 68,1804
+  GfsSimulation * sim;95,2427
+  GfsSolidMoving * s;96,2450
+  GfsVariable * old_solid_v,97,2472
+  GfsVariable * old_solid_v, ** sold2,97,2472
+  GfsVariable * old_solid_v, ** sold2, ** v;97,2472
+  GArray * stmp,98,2517
+  GArray * stmp, * sall;98,2517
+} SolidInfo;99,2542
+static double surface_value 101,2556
+static void init_new_cell_velocity_from_solid 135,3536
+static void update_neighbors 142,3744
+static gboolean refine_maxlevel 154,4077
+static void moving_cell_coarse_fine 159,4194
+static void moving_vof_cell_coarse_fine 174,4613
+static void moving_cell_init 210,5566
+static void moving_cell_fine_init 243,6458
+static void create_new_cells 269,7239
+static FttVector rpos[rpos288,7973
+static void match 296,8196
+static void boundary_match 372,10745
+static void renew_boundary 389,11250
+static void remesh_surface_moving 419,12317
+static void solid_moving_destroy 436,12903
+static void solid_moving_read 442,13116
+static void solid_moving_write 506,14901
+static void set_old_solid 518,15283
+static void check_face 526,15505
+static void check_solid_fractions 534,15691
+static void is_diffusion 544,15988
+static void set_permanent 549,16110
+  GfsDomain * domain;555,16212
+  GfsVariable * status;556,16234
+  GfsVariable ** v;557,16258
+} ReInitParams;558,16278
+static void redistribute_destroyed_cells_content 560,16295
+static guint domain_reinit_solid_fractions 629,18488
+static void reinit_solid_fractions 663,19448
+static void moving_advection_update 694,20465
+static void moving_init 765,22587
+static gboolean solid_moving_event 790,23401
+static void solid_moving_class_init 797,23637
+static void solid_moving_init 805,23909
+GfsEventClass * gfs_solid_moving_class 813,24118
+#define MOVING_CFL 835,24675
+static void set_dtmax 842,24792
+static void simulation_moving_set_timestep 857,25137
+static void move_vertex 869,25512
+static void move_vertex_mpi 885,25942
+static void synchronize_vertex 905,26577
+static void solid_move_remesh 916,26843
+static void move_solids 949,27976
+static void moving_divergence_approx 993,29501
+static void moving_divergence_distribution 1000,29748
+static void divergence_approx_hook 1027,30540
+static void moving_divergence_mac 1043,31068
+static void divergence_mac_hook_order_1 1053,31455
+static void divergence_mac_hook_order_2 1070,31898
+static void moving_mac_projection 1087,32354
+static void simulation_moving_run 1103,32867
+static void simulation_moving_class_init 1220,36704
+static void old_solid_cleanup 1225,36817
+static void none 1231,36952
+static void simulation_moving_init 1233,36980
+GfsSimulationClass * gfs_simulation_moving_class 1251,37850
+
+simulation.c,4568
+static void module_close 44,1286
+static void simulation_destroy 50,1435
+static void simulation_write 76,2450
+static gboolean strmatch 171,4895
+static GModule * load_module 183,5112
+static void simulation_read 237,6500
+void gfs_advance_tracers 404,11832
+static void simulation_run 431,12684
+static gdouble simulation_cfl 553,16943
+static void gfs_simulation_class_init 575,17721
+static gdouble cell_x 587,18050
+static gdouble cell_y 601,18340
+static gdouble cell_z 615,18630
+static gdouble cell_ax 629,18920
+static gdouble cell_ay 641,19210
+static gdouble cell_az 653,19500
+static gdouble cell_cx 665,19790
+static gdouble cell_cy 679,20083
+static gdouble cell_cz 693,20376
+static gdouble cell_rx 707,20669
+static gdouble cell_ry 720,20922
+static gdouble cell_rz 733,21175
+static gdouble cell_dV 746,21428
+static gdouble cell_dL 758,21674
+static gdouble cell_t 765,21850
+static gdouble cell_dt 770,21957
+static gdouble cell_vorticity 775,22078
+static gdouble cell_divergence 780,22231
+static gdouble cell_velocity_norm 785,22386
+static gdouble cell_velocity_norm2 791,22605
+static gdouble cell_level 797,22828
+static gdouble cell_fraction 802,22908
+static gdouble cell_solid_area 808,23066
+static gdouble cell_solid_sr 816,23332
+static gdouble cell_solid_sl 821,23458
+static gdouble cell_solid_st 826,23583
+static gdouble cell_solid_sb 831,23707
+static gdouble cell_solid_sf 837,23846
+static gdouble cell_solid_sk 842,23972
+static gdouble cell_velocity_lambda2 848,24113
+static gdouble cell_streamline_curvature 853,24278
+static gdouble cell_2nd_principal_invariant 859,24513
+static gdouble cell_pid 864,24715
+static gdouble cell_id 871,24885
+static gdouble cell_orthogonality 878,25053
+static void simulation_init 904,25901
+GfsSimulationClass * gfs_simulation_class 1011,30806
+GfsSimulation * gfs_simulation_new 1032,31350
+static void init_non_variable 1043,31621
+static void redo_non_variable 1049,31761
+void gfs_simulation_init 1062,32082
+static void refine_cell_corner 1099,33341
+static void check_face 1105,33551
+static void check_solid_fractions 1113,33737
+guint gfs_check_solid_fractions 1132,34228
+static void is_diffusion 1141,34448
+static void set_permanent 1146,34570
+GSList * gfs_simulation_get_solids 1158,34811
+static gboolean coarsen_cell 1170,35070
+static void refine_leaf_boxes 1175,35126
+void gfs_simulation_refine 1197,35951
+GfsSimulation * gfs_simulation_read 1270,38043
+static void write_preloaded_modules 1311,39115
+void gfs_simulation_write 1337,39913
+static void count_edges 1358,40459
+static void write_node 1363,40532
+static void write_edge 1374,40782
+void gfs_simulation_union_write 1396,41468
+static gdouble min_cfl 1463,43560
+void gfs_simulation_set_timestep 1495,44493
+void gfs_time_write 1568,46571
+void gfs_time_init 1593,47200
+void gfs_time_read 1613,47521
+void gfs_physical_params_write 1653,48428
+void gfs_physical_params_init 1672,48865
+void gfs_physical_params_read 1688,49186
+static void error_handler 1764,50903
+void gfs_simulation_run 1796,51713
+void gfs_simulation_map 1819,52388
+void gfs_simulation_map_inverse 1842,52917
+void gfs_simulation_map_vector 1869,53599
+void gfs_simulation_map_inverse_vector 1891,54143
+void gfs_simulation_map_inverse_cell 1916,54896
+gdouble gfs_dimensional_value 1942,55593
+gboolean gfs_variable_is_dimensional 1959,55996
+static void event_do_adapt 1975,56308
+static void event_do_not_adapt 1981,56439
+static void advection_run 1987,56575
+static void gfs_advection_class_init 2044,58551
+GfsSimulationClass * gfs_advection_class 2049,58652
+  GfsVariable * divu,2077,59288
+  GfsVariable * divu, * div;2077,59288
+  gdouble ddiv;2078,59317
+  GtsRange vol;2079,59333
+} DivData;2080,59349
+static void rescale_div 2082,59361
+static void add_ddiv 2090,59626
+static void correct_div 2096,59818
+static void has_dirichlet 2114,60416
+  GfsVariable * lhs;2121,60572
+  gboolean dirichlet;2122,60593
+} CompatPar;2123,60615
+static void check_box_dirichlet 2125,60629
+static void poisson_run 2139,60994
+static void poisson_class_init 2213,63731
+static void poisson_init 2218,63824
+GfsSimulationClass * gfs_poisson_class 2224,64003
+static void axi_read 2251,64621
+static gdouble axi_face_metric 2269,65171
+static gdouble axi_cell_metric 2276,65316
+static void axi_solid_metric 2283,65456
+static gdouble axi_scale_metric 2289,65635
+static gdouble axi_viscous_metric_implicit 2298,65820
+static void axi_class_init 2308,66034
+static void axi_init 2313,66140
+GfsSimulationClass * gfs_axi_class 2322,66422
+
+unstructured.c,1224
+#define NV 31,1036
+static void reset_pointers 33,1072
+  FttCell * cell;41,1253
+  guint i,42,1271
+  guint i, index;42,1271
+} Vertex;43,1289
+static FttDirection d[d46,1327
+static void vertex_pos 57,1769
+static float vertex_value 63,1925
+  GfsVariable ** v;70,2136
+  GfsDomain * domain;71,2156
+  GSList * vertices;72,2178
+  gint max_depth;73,2199
+  guint size,74,2217
+  guint size, index;74,2217
+} AllocParams;75,2238
+static void allocate_vertices 77,2254
+static GSList * allocate_domain_vertices 133,3810
+static void print_pos 155,4470
+static void draw_vertices 164,4647
+  FILE * fp;179,5053
+  GfsVariable ** v;180,5066
+} WriteParams;181,5086
+static void write_element 183,5102
+static void cell_count 194,5379
+static guint local_domain_size 199,5454
+void gfs_domain_write_vtk 218,6047
+static void write_tecplot_element 308,8555
+void gfs_domain_write_tecplot 337,9331
+  FttCell * cell;413,11488
+  guint nnodes;414,11529
+  FttVector node[node415,11590
+} WallFace;416,11643
+  GfsDomain * domain;419,11673
+  GSList * wallfaces;420,11695
+  guint nnodes_total;421,11717
+} AllocateFacesParams;422,11739
+static void allocate_wallfaces 424,11763
+void gfs_domain_write_tecplot_surface 555,16520
+
+vof.h,1459
+#define __VOF_H__21,856
+#define GFS_IS_FULL(30,979
+#  define gfs_plane_volume 44,1443
+#  define gfs_plane_alpha 45,1492
+#  define gfs_plane_center 46,1542
+#  define gfs_plane_area_center 47,1593
+typedef struct _GfsVariableTracerVOF        GfsVariableTracerVOF;67,2211
+typedef struct _GfsVariableTracerVOFClass   GfsVariableTracerVOFClass;68,2277
+struct _GfsVariableTracerVOF 70,2349
+  GfsVariableTracer parent;72,2398
+  GtsSListContainer * concentrations;74,2504
+  GfsVariable * m[m77,2560
+  GfsVariable * m[FTT_DIMENSION], * alpha;77,2560
+struct _GfsVariableTracerVOFClass 80,2607
+  GfsVariableClass parent_class;82,2661
+  void (* update)85,2712
+#define GFS_VARIABLE_TRACER_VOF(88,2773
+#define GFS_VARIABLE_TRACER_VOF_CLASS(91,2933
+#define GFS_IS_VARIABLE_TRACER_VOF(94,3087
+typedef struct _GfsVariableVOFConcentration        GfsVariableVOFConcentration;101,3324
+struct _GfsVariableVOFConcentration 103,3405
+  GfsVariableTracer parent;105,3461
+  GfsVariableTracerVOF * vof;108,3507
+#define GFS_VARIABLE_VOF_CONCENTRATION(111,3541
+#define GFS_IS_VARIABLE_VOF_CONCENTRATION(114,3732
+typedef struct _GfsVariableTracerVOFHeight GfsVariableTracerVOFHeight;121,3978
+struct _GfsVariableTracerVOFHeight 123,4050
+  GfsVariableTracerVOF parent;125,4105
+  GfsVariable * hb[hb128,4154
+  GfsVariable * hb[FTT_DIMENSION], * ht[ht128,4154
+#define GFS_VARIABLE_TRACER_VOF_HEIGHT(131,4214
+#define GFS_IS_VARIABLE_TRACER_VOF_HEIGHT(134,4394
+
+moving.h,836
+#define __MOVING_H__21,854
+typedef struct _GfsNumberedVertex        GfsNumberedVertex;35,1068
+#define GFS_IS_NUMBERED_VERTEX(37,1129
+#define GFS_NUMBERED_VERTEX(39,1240
+struct _GfsNumberedVertex 43,1381
+  GtsVertex parent;44,1409
+  glong num;45,1429
+typedef struct _GfsSolidMoving         GfsSolidMoving;52,1537
+struct _GfsSolidMoving 54,1593
+  GfsSolid parent;56,1636
+  GfsFunction * level;59,1673
+  gboolean active;60,1696
+  glong nvertex;61,1715
+#define GFS_SOLID_MOVING(66,1784
+#define GFS_IS_SOLID_MOVING(69,1920
+typedef struct _GfsSimulationMoving         GfsSimulationMoving;74,2065
+struct _GfsSimulationMoving 76,2131
+  GfsSimulation parent;78,2179
+  GfsVariable * old_solid,81,2221
+  GfsVariable * old_solid, ** sold2;81,2221
+#define GFS_SIMULATION_MOVING(84,2262
+#define GFS_IS_SIMULATION_MOVING(87,2413
+
+source.c,6256
+gdouble gfs_variable_mac_source 37,1145
+  GfsVariable * v,61,1600
+  GfsVariable * v, * sv;61,1600
+  gdouble dt;62,1625
+} SourcePar;63,1639
+static void add_sources 65,1653
+void gfs_domain_variable_centered_sources 89,2173
+GfsVariable * gfs_domain_variable_fluxes 117,2818
+static void source_generic_init 148,3544
+GfsSourceGenericClass * gfs_source_generic_class 153,3632
+GfsSourceGeneric * gfs_source_find 182,4364
+static void source_scalar_write 208,4926
+static void source_scalar_read 224,5368
+static void source_scalar_class_init 269,6766
+GfsSourceGenericClass * gfs_source_scalar_class 275,6953
+static void source_velocity_read 303,7625
+static void source_velocity_class_init 329,8455
+GfsSourceGenericClass * gfs_source_velocity_class 334,8589
+static void source_destroy 362,9244
+static gdouble source_face_value 376,9607
+static gdouble source_vector_face_value 383,9787
+static gdouble source_value 396,10175
+static gdouble source_vector_value 403,10345
+static void source_read 410,10538
+static void source_write 450,11849
+static void source_class_init 470,12415
+static void source_init 477,12634
+GfsSourceGenericClass * gfs_source_class 482,12737
+static void source_control_destroy 510,13387
+static void source_control_read 518,13639
+static void source_control_write 529,14103
+  GfsVariable * v;536,14330
+  gdouble s,537,14349
+  gdouble s, sv;537,14349
+} Sum;538,14366
+static void sum 540,14374
+static gboolean source_control_event 547,14529
+static void source_control_class_init 563,15188
+static gdouble source_control_value 571,15496
+static void source_control_init 578,15649
+GfsSourceGenericClass * gfs_source_control_class 583,15768
+static void source_control_field_destroy 611,16499
+static gdouble source_control_field_face_value 619,16759
+static void source_control_field_read 626,16971
+static void source_control_field_write 660,17963
+static void source_control_field_root 666,18221
+  FttCell * root;676,18613
+  gdouble * corners;677,18631
+  GfsVariable * v;678,18652
+} ExtraData;679,18671
+static void extrapolate 681,18685
+static void extrapolate_field 688,18876
+static gboolean source_control_field_event 698,19252
+static void source_control_field_class_init 718,20154
+static gdouble source_control_field_value 726,20492
+static void source_control_field_init 733,20673
+GfsSourceGenericClass * gfs_source_control_field_class 740,20854
+static void source_flux_destroy 768,21595
+static void source_flux_read 778,21941
+static void source_flux_write 794,22560
+static void add 801,22819
+static gboolean source_flux_event 807,22994
+static void source_flux_class_init 823,23566
+static gdouble source_flux_value 831,23859
+static void source_flux_init 838,24057
+GfsSourceGenericClass * gfs_source_flux_class 843,24170
+static void diffusion_destroy 871,24819
+static void diffusion_read 882,25137
+static void diffusion_write 898,25503
+static void update_mu 905,25694
+static gboolean diffusion_event 910,25819
+static gdouble diffusion_face 932,26694
+static gdouble diffusion_cell 940,27006
+static void diffusion_class_init 947,27218
+static void diffusion_init 957,27561
+GfsDiffusionClass * gfs_diffusion_class 965,27752
+gdouble gfs_diffusion_face 986,28273
+gdouble gfs_diffusion_cell 991,28412
+static void source_diffusion_destroy 1003,28652
+static GfsSourceDiffusion * previous_diffusion_source 1010,28859
+static void source_diffusion_read 1025,29217
+static void source_diffusion_write 1066,30579
+static gboolean source_diffusion_event 1077,30930
+static gdouble source_diffusion_value 1089,31311
+static void source_diffusion_class_init 1130,32413
+static void source_diffusion_init 1139,32732
+GfsSourceGenericClass * gfs_source_diffusion_class 1145,32943
+gdouble gfs_source_diffusion_face 1166,33531
+gdouble gfs_source_diffusion_cell 1174,33732
+  GfsSourceGeneric * s;1190,34090
+  GfsVariable * v,1191,34114
+  GfsVariable * v, * sv,1191,34114
+  GfsVariable * v, * sv, * tv;1191,34114
+  gdouble dt;1192,34145
+} FluxPar;1193,34159
+static void add_diffusion_explicit_flux 1195,34171
+static void source_diffusion_explicit_flux 1229,35110
+static void gfs_source_diffusion_explicit_read 1241,35585
+static void gfs_source_diffusion_explicit_write 1250,35896
+  GfsFunction * alpha;1256,36087
+  GfsSourceGeneric * s;1257,36110
+  gdouble dtmax;1258,36134
+} StabilityParams;1259,36151
+static void cell_diffusion_stability 1261,36171
+static gdouble source_diffusion_stability 1291,36853
+static void gfs_source_diffusion_explicit_class_init 1307,37343
+static void gfs_source_diffusion_explicit_init 1314,37626
+GfsSourceGenericClass * gfs_source_diffusion_explicit_class 1320,37788
+static void compute_transverse 1348,38566
+static void source_viscosity_read 1357,38857
+static void source_viscosity_write 1386,39794
+static gdouble source_viscosity_non_diffusion_value 1396,40192
+static gdouble source_viscosity_value 1424,41056
+static void source_viscosity_class_init 1432,41280
+static void source_viscosity_init 1438,41475
+GfsSourceGenericClass * gfs_source_viscosity_class 1445,41656
+static gdouble source_viscosity_stability 1473,42342
+static void source_viscosity_explicit_class_init 1488,42800
+static void add_viscosity_explicit_flux 1498,43175
+static void add_axisymmetric_term 1549,44462
+static void source_viscosity_explicit_flux 1561,44924
+static void source_viscosity_explicit_init 1584,45749
+GfsSourceGenericClass * gfs_source_viscosity_explicit_class 1591,45915
+static void source_coriolis_destroy 1619,46723
+static void gfs_source_coriolis_read 1636,47158
+static void gfs_source_coriolis_write 1702,48958
+static void coriolis_drag_metric_coefficients 1714,49349
+static gdouble gfs_source_coriolis_mac_value 1734,50013
+static void save_coriolis 1766,51240
+static gboolean gfs_source_coriolis_event 1790,52372
+static gdouble gfs_source_coriolis_centered_value 1812,53215
+static void gfs_source_coriolis_class_init 1819,53413
+static void gfs_source_coriolis_init 1828,53743
+GfsSourceGenericClass * gfs_source_coriolis_class 1837,54070
+GfsSourceCoriolis * gfs_has_source_coriolis 1864,54803
+static void implicit_coriolis_2D 1885,55239
+static void implicit_coriolis_3D 1908,55992
+void gfs_source_coriolis_implicit 1943,57105
+
+simulation.h,1996
+#define __SIMULATION_H__21,858
+  typedef struct _GfsSimulation         GfsSimulation;31,1005
+typedef struct _GfsSimulationClass    GfsSimulationClass;33,1067
+typedef struct _GfsTime               GfsTime;34,1125
+typedef struct _GfsPhysicalParams     GfsPhysicalParams;35,1172
+typedef struct _GfsAdaptStats         GfsAdaptStats;36,1229
+struct _GfsTime 38,1283
+  gdouble t,39,1301
+  gdouble t, start,39,1301
+  gdouble t, start, end;39,1301
+  guint i,40,1326
+  guint i, istart,40,1326
+  guint i, istart, iend;40,1326
+  gdouble dtmax;41,1351
+struct _GfsPhysicalParams 44,1372
+  gdouble L,45,1400
+  gdouble L, g;45,1400
+  GfsFunction * alpha;46,1416
+struct _GfsAdaptStats 49,1443
+  guint removed,50,1467
+  guint removed, created;50,1467
+  GtsRange cmax;51,1493
+  GtsRange ncells;52,1510
+  gint depth_increase;53,1529
+struct _GfsSimulation 56,1556
+  GfsDomain parent;57,1580
+  GfsTime time;59,1601
+  GfsPhysicalParams physical_params;60,1617
+  GfsMultilevelParams projection_params;62,1655
+  GfsMultilevelParams approx_projection_params;63,1696
+  GfsAdvectionParams advection_params;65,1745
+  GtsSListContainer * refines;67,1785
+  GtsSListContainer * adapts;69,1817
+  GfsAdaptStats adapts_stats;70,1847
+  GtsSListContainer * events,72,1878
+  GtsSListContainer * events, * maps;72,1878
+  GSList * modules,73,1916
+  GSList * modules, * globals,73,1916
+  GSList * modules, * globals, * preloaded_modules;73,1916
+  GtsSListContainer * solids;75,1969
+  guint thin;76,1999
+  gboolean output_solid;77,2013
+  gdouble tnext;79,2039
+  GfsVariable * u0[u081,2057
+struct _GfsSimulationClass 84,2096
+  GfsDomainClass parent_class;85,2125
+  void    (* run)87,2157
+  gdouble (* cfl)88,2194
+#define GFS_SIMULATION(91,2235
+#define GFS_SIMULATION_CLASS(94,2370
+#define GFS_IS_SIMULATION(97,2503
+#define              gfs_object_simulation(143,4809
+#define              gfs_object_simulation_set(144,4900
+#define GFS_IS_POISSON(152,5099
+#define GFS_IS_AXI(158,5269
+
+unstructured.h,34
+#define __UNSTRUCTURED_H__22,868
