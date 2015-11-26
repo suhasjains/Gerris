@@ -1,0 +1,1 @@
+configure.ac goes to main folder, whereas other files goes to modules directory
