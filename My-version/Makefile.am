@@ -99,10 +99,10 @@ libtide2D_la_SOURCES = tide.c
 libtide2D_la_CFLAGS = $(AM_CFLAGS) $(GSL_CFLAGS) -DFTT_2D=1
 libtide2D_la_LIBADD = $(GFS2D_LIBS) -Lfes2004 -lfes -lnetcdf $(GSL_LIBS)
 
-liblagrangian2D_la_SOURCES = Gfs_lagrangian.c
+liblagrangian2D_la_SOURCES = Gfs_lagrangian.c 
 liblagrangian2D_la_CFLAGS = $(AM_CFLAGS)
 liblagrangian2D_la_LIBADD = $(GFS2D_LIBS)
-liblagrangian3D_la_SOURCES = Gfs_lagrangian.c
+liblagrangian3D_la_SOURCES = Gfs_lagrangian.c 
 liblagrangian3D_la_CFLAGS = $(AM_CFLAGS)
 liblagrangian3D_la_LIBADD = $(GFS3D_LIBS)
 
