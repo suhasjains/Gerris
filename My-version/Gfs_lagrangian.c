@@ -1,5 +1,41 @@
 #include "Gfs_lagrangian.h"
 
+#ifdef HAVE_MPI
+#include "mpi_boundary.h"
+#endif /*HAVE_MPI*/
+#ifdef HAVE_MPI
+
+void mpi_particle_numbering(GfsDomain *domain, GfsLagrangianParticles *lagrangian)
+{
+
+  if(domain->pid < 0)
+    return;
+
+  guint comm_size;
+  MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+  guint idadd[comm_size], i;
+
+  for(i=0; i < comm_size; i++){
+    if(i == domain->pid)
+      idadd[i] = lagrangian->idlast - lagrangian->maxid;
+    else
+      idadd[i] = 0;
+    gfs_all_reduce(domain, idadd[i], MPI_INT, MPI_MAX);         //Not defined anymore
+  }
+
+  for(i = 1; i <= domain->pid; i++)
+    idadd[i] += idadd[i-1];
+
+  GSList *j = lagrangian->particles;
+  while(j){
+    Particle *p = (Particle *) (j->data);
+    if(p->id > lagrangian->maxid)
+      p->id = lagrangian->maxid + idadd[domain->pid]--;
+    j = j->next;
+  }
+}
+
+#endif /*HAVE_MPI*/
 
 
 
@@ -518,6 +554,9 @@ static gboolean check_stencil(FttCell * cell, FttVector pos0, gdouble sigma, Ftt
   return check;
 }
 
+/*Gaussian Smoothed two-way coupling force applied on all cells in the domain is not included here*/
+
+/*Gaussian unsmoothed two-way coupling force is not included*/
 
 /*Gaussian Smoothed Two-way Coupling Force: Applied only on 3Sigma surroundings*/
 static void compute_coupling_force (Particle *p, GfsVariable **f)
@@ -845,7 +884,7 @@ static FttCell * locate_particle_ray_cell(GfsDomain *domain, FttVector pos0, Ftt
   return NULL;
 }
 
-
+/*Solid reflection is not included here*/
 
 /*Tracks the particle path ray to identify boundary cell for the application of the Boundary Conditions*/
 static FttCell * boundarycell ( GfsDomain *domain, Particle *p, FttDirection *dstore, gdouble dt)
@@ -1282,7 +1321,9 @@ static void boundary_particles(GfsLagrangianParticles *lagrangian, GfsDomain *do
 }
 
 
+/*Immersed boundary method is not included*/
 
+/*Collision not included*/
 
 
 /*GfsLagrangianParticle event method*/
