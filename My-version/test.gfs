@@ -1,0 +1,68 @@
+8 7 GfsSimulation GfsBox GfsGEdge {} {
+
+  Time { end = 15 }
+
+  Refine 6
+
+  # Insert the solid boundary defined as x*x + y*y - 0.0625*0.0625 = 0
+  # (i.e. a cylinder of radius 0.0625 centered on the origin)
+  Solid (x*x + y*y - 0.0625*0.0625)
+
+  VariableTracer {} T
+
+  Init {} { U = 1 }
+
+  AdaptVorticity { istep = 1 } { maxlevel = 6 cmax = 1e-2 }
+
+  AdaptGradient { istep = 1 } { maxlevel = 6 cmax = 1e-2 } T
+
+  SourceDiffusion {} U 0.00078125
+  SourceDiffusion {} V 0.00078125
+
+  GModule lagrangian
+  LagrangianParticles Par { lift = 0 } { 10 0 
+
+	1 0 0 0 0 0 0 1 1 1 1
+	
+  }
+
+  OutputLagrangianParticles { istep = 1 } stderr
+  OutputTime { istep = 10 } stderr
+
+  OutputBalance { istep = 10 } stderr
+
+  # Writes info about the convergence of the Poisson solver on standard error
+  OutputProjectionStats { istep = 10 } stderr
+
+
+  # Outputs profiling information at the end of the simulation to standard error
+  OutputTiming { start = end } stderr
+
+  OutputSimulation { istep = 10 } snapshot-%g.vtk { format = VTK }
+
+}
+GfsBox {
+  # Left boundary on the leftmost box is:
+  #   Dirichlet U=1 for the x-component of the velocity
+  #   Dirichlet T = 1 if y < 0, 0 otherwise
+  left = Boundary {
+    BcDirichlet U 1
+    BcDirichlet T { return y < 0. ? 1. : 0.; }
+  }
+}
+GfsBox {}
+GfsBox {}
+GfsBox {}
+GfsBox {}
+GfsBox {}
+GfsBox {}
+# Right boundary on the rightmost box is outflow
+GfsBox { right = BoundaryOutflow }
+# All the boxes are linked by left to right links
+1 2 right
+2 3 right
+3 4 right
+4 5 right
+5 6 right
+6 7 right
+7 8 right
