@@ -44,6 +44,8 @@ pkglib_LTLIBRARIES = \
 	libterrain3D.la \
 	libparticulates2D.la \
 	libparticulates3D.la \
+	liblparticles2D.la \
+	liblparticles3D.la \
 	libokada2D.la \
 	libokada3D.la \
 	libdf33D.la \
@@ -55,8 +57,6 @@ pkglib_LTLIBRARIES = \
 	libtopics3D.la \
 	libculvert2D.la \
 	liblayered2D.la \
-	liblagrangian2D.la \
-	liblagrangian3D.la \
 	$(TIDE) \
 	$(STOKES) \
 	$(WAVEWATCH) \
@@ -99,19 +99,19 @@ libtide2D_la_SOURCES = tide.c
 libtide2D_la_CFLAGS = $(AM_CFLAGS) $(GSL_CFLAGS) -DFTT_2D=1
 libtide2D_la_LIBADD = $(GFS2D_LIBS) -Lfes2004 -lfes -lnetcdf $(GSL_LIBS)
 
-liblagrangian2D_la_SOURCES = Gfs_lagrangian.c 
-liblagrangian2D_la_CFLAGS = $(AM_CFLAGS)
-liblagrangian2D_la_LIBADD = $(GFS2D_LIBS)
-liblagrangian3D_la_SOURCES = Gfs_lagrangian.c 
-liblagrangian3D_la_CFLAGS = $(AM_CFLAGS)
-liblagrangian3D_la_LIBADD = $(GFS3D_LIBS)
-
 libstokes3D_la_SOURCES = stokes.c CW263.f
 libstokes3D_la_CFLAGS = $(AM_CFLAGS)
 libstokes3D_la_LIBADD = $(GFS3D_LIBS)
 libstokes2D_la_SOURCES = stokes.c CW263.f
 libstokes2D_la_CFLAGS = $(AM_CFLAGS) -DFTT_2D=1
 libstokes2D_la_LIBADD = $(GFS2D_LIBS)
+
+liblparticles3D_la_SOURCES = lparticles.c 
+liblparticles3D_la_CFLAGS = $(AM_CFLAGS)
+liblparticles3D_la_LIBADD = $(GFS3D_LIBS)
+liblparticles2D_la_SOURCES = lparticles.c 
+liblparticles2D_la_CFLAGS = $(AM_CFLAGS) -DFTT_2D=1
+liblparticles2D_la_LIBADD = $(GFS2D_LIBS)
 
 libwavewatch2D_la_SOURCES = wavewatch.c
 libwavewatch2D_la_LIBADD = $(GFS2D_LIBS) -Lwavewatch -lwavewatch -L/usr/lib/gcc/i486-linux-gnu/4.2 -lgfortran

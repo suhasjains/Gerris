@@ -1,22 +1,56 @@
 #ifndef _LPARTICLES_H_
 #define _LPARTICLES_H_
-
+#include "gfs.h"
 
 /* LParticles: Header */
-
+typedef struct _Particle Particle;
+typedef struct _ForceCoefficients ForceCoefficients;
 typedef struct _LParticles         LParticles;
+typedef struct _LParticlesClass    LParticlesClass;
 
 
-struct _LParticles {
-  /*< private >*/
-  GfsEvent parent;
+/*Various forces acting on the particle due to its motion in the fluid*/
+typedef struct {
+        Particle *p;
+        GfsVariable **u;
+        ForceCoefficients *fcoeffs;
+        gdouble dt;
+        LParticles *lagrangian;
+} ForceParams;
 
-  /*< public >*/
-  /* add extra data here (if public) */
+struct _Particle {
+
+        FttVector pos,vel;
+        guint id;
+        gdouble density,volume;
+        FttCell *cell;
+
 };
 
+struct _ForceCoefficients {
 
-typedef struct _LParticlesClass    LParticlesClass;
+        guint init, fluidadv, RK4;
+
+};
+
+struct _LParticles {
+  	
+	/*< private >*/
+  	GfsEvent parent;
+
+  	/*< public >*/
+  	/* add extra data here (if public) */
+	GString *name;
+        GfsVariable *density;
+        GfsVariable *reynolds;
+
+        GSList *particles;
+        guint maxid;
+        gboolean first_call;
+        ForceCoefficients fcoeff;
+
+};
+
 
 
 struct _LParticlesClass {

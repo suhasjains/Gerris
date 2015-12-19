@@ -1,4 +1,3 @@
-#include <gfs.h>
 #include "lparticles.h"
 /* LParticles: Object */
 
@@ -102,7 +101,7 @@ static void l_particles_read (GtsObject ** o, GtsFile * fp)
 
 
 	/* do object-specific read here */
-  	GfsLagrangianParticles * lagrangian = LAGRANGIAN_PARTICLES(*o);
+  	LParticles * lagrangian = L_PARTICLES(*o);
 	GfsDomain * domain = GFS_DOMAIN (gfs_object_simulation (lagrangian));
 
 
@@ -129,7 +128,7 @@ static void l_particles_read (GtsObject ** o, GtsFile * fp)
     		}
 
 		//printf("New domain variable added is ' %s '\n", lagrangian->density->name);
-    		gts_file_next_token (fp);
+   		gts_file_next_token (fp);
   	}
 
 	
@@ -265,6 +264,9 @@ static void l_particles_read (GtsObject ** o, GtsFile * fp)
 
 			else if(g_ascii_strcasecmp(fp->token->str, "fluidadv") == 0)
 	        		assign_val_vars (&lagrangian->fcoeff.fluidadv, fp, *o);
+			
+			else if(g_ascii_strcasecmp(fp->token->str, "RK4") == 0)
+	        		assign_val_vars (&lagrangian->fcoeff.RK4, fp, *o);
 			else{
         			gts_file_error (fp, "Not a valid variable");
    				return;
@@ -289,7 +291,7 @@ static void l_particles_write (GtsObject * o, FILE * fp)
   	if (GTS_OBJECT_CLASS (l_particles_class ())->parent_class->write) (* GTS_OBJECT_CLASS (l_particles_class ())->parent_class->write) (o, fp);
 
   	/* do object specific write here */
-	GfsLagrangianParticles * lagrangian = LAGRANGIAN_PARTICLES(o);
+	LParticles * lagrangian = L_PARTICLES(o);
 	
 	fprintf(fp," %s ",lagrangian->name->str);
         if(lagrangian->density)
@@ -301,6 +303,8 @@ static void l_particles_write (GtsObject * o, FILE * fp)
                 fprintf(fp, " init = 1");
         if(lagrangian->fcoeff.fluidadv == 1)
                 fprintf(fp, " fluidadv = 1");
+	if(lagrangian->fcoeff.RK4 == 1)
+		fprintf(fp, " RK = 1 ");
 	fprintf (fp," } \n");
 
 	//write particles data
@@ -319,34 +323,202 @@ static void l_particles_write (GtsObject * o, FILE * fp)
 
 }
 
+
+
+/*l particle object destroy */
+static void l_particles_destroy (GtsObject * object) {
+
+        /* do not forget to call destroy method of the parent */
+        (* GTS_OBJECT_CLASS (l_particles_class ())->parent_class->destroy) (    object);
+
+        /* do object-specific cleanup here */
+        LParticles * lagrangian = L_PARTICLES(object);
+
+
+        if(lagrangian->particles)
+                g_slist_foreach (lagrangian->particles, (GFunc) g_free, NULL);
+
+        g_slist_free(lagrangian->particles);
+
+        g_string_free(lagrangian->name, TRUE);
+
+
+}
+
+
+/*Updating the particle position*/
+static void advect_particles(Particle * p, double dt) {
+
+        p->pos.x +=  dt* p->vel.x;
+        p->pos.y +=  dt* p->vel.y;
+        #if !FTT_2D
+                p->pos.z +=  dt* p->vel.z;
+        #endif
+}
+
+/*Updating the particle velocity due to fluid velocity*/
+static void fluidadvect_particles(Particle * p, GfsVariable **u) {
+
+        if(p->cell!=NULL) {
+                p->vel.x = gfs_interpolate(p->cell, p->pos, u[0]);
+                p->vel.y = gfs_interpolate(p->cell, p->pos, u[1]);
+                #if !FTT_2D
+                        p->vel.z = gfs_interpolate(p->cell, p->pos, u[2]);
+                #endif
+        }
+}
+
+/* Initializes particle velocity*/
+static void init_particles(LParticles * l, GfsDomain *domain) {
+
+        GSList *i = l->particles;
+        Particle *p;
+        GfsVariable ** u = gfs_domain_velocity (domain);
+
+        while(i) {
+                p = (Particle *) i->data;
+                p->cell = gfs_domain_locate(domain, p->pos, -1, NULL);
+
+                if(p->cell!=NULL) {
+                        p->vel.x = gfs_interpolate(p->cell, p->pos, u[0]);
+                        p->vel.y = gfs_interpolate(p->cell, p->pos, u[1]);
+                        #if !FTT_2D
+                                p->vel.z = gfs_interpolate(p->cell, p->pos, u[2]);
+                        #endif
+                }
+        i = i->next;
+        }
+}
+
+
 static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
 {
   	if ((* GFS_EVENT_CLASS (GTS_OBJECT_CLASS (l_particles_class ())->parent_class)->event) (event, sim)) {
     
+		/* do object-specific event here */
+		GfsDomain * domain = GFS_DOMAIN (sim);
+        	LParticles *lagrangian = L_PARTICLES(event);
 
-	/* do object-specific event here */
+                if(lagrangian->first_call) {
+                        lagrangian->first_call = FALSE;
 
-	//printf("dt=%g\n",sim->advection_params.dt);
+                        GSList *i = lagrangian->particles;
+                        lagrangian->maxid = 0;
+                        while(i) {
+                                Particle *p = (Particle *)(i->data);
+                                lagrangian->maxid = MAX(lagrangian->maxid, p->id);
+                                p->cell = gfs_domain_locate(domain, p->pos, -1, NULL)    ;
+                                i = i->next;
 
-    return TRUE;
-  }
-  return FALSE;
+                                //remove the particle if outside domain
+                                if(!p->cell) {
+                                        printf("Particle %d at %g %g is outside domain\n",p->id, p->pos.x, p->pos.y);
+                                        lagrangian->particles = g_slist_remove(lagrangian->particles, p);
+                                        g_free(p);
+                                }
+                        }
+                        //Initializing particle velocity
+                        if(lagrangian->fcoeff.init == 1)
+                                init_particles(lagrangian, domain);
+
+                }
+		
+		//Fetch simulation parameters
+                GSList *i = lagrangian->particles;
+                Particle * p;
+                GfsVariable ** u = gfs_domain_velocity (domain);
+                gdouble dt = sim->advection_params.dt;
+		//printf("dt = %g \n", dt);
+
+                //Fetch force parameters
+                ForceParams * pars = g_malloc(sizeof(ForceParams));
+                pars->dt = sim->advection_params.dt;
+                pars->fcoeffs = &lagrangian->fcoeff;
+                pars->u = u;
+                pars->lagrangian = lagrangian;
+
+                //Looping over all particles
+                i = lagrangian->particles;
+                while(i) {
+                        p = (Particle *)(i->data);
+                        p->cell = gfs_domain_locate(domain, p->pos, -1, NULL);
+
+                        //Remove particle if outside domain
+                        if(!p->cell) {
+                                lagrangian->particles = g_slist_remove(lagrangian->particles, p);
+                                g_free(p);
+                        }
+                        else {
+                                //Making velocity equal to fluid velocity
+                                if(lagrangian->fcoeff.fluidadv == 1) {
+                                        fluidadvect_particles(p, pars->u);
+					printf("Making velocity equal to fluid velocity\n");
+                                }
+                                
+				//Calculating half time velocities for RK4 advection
+                                if(lagrangian->fcoeff.RK4 == 1) {
+                                        //fluidadvect_particles_RK4(p, pars->u);
+					printf("Equating half time fluid velocity\n");
+                        	}
+			}
+
+                        i = i->next;
+                }
+
+		//Looping over all particles
+                i = lagrangian->particles;
+                while(i) {
+                        p = (Particle *)(i->data);
+                        p->cell = gfs_domain_locate(domain, p->pos, -1, NULL);
+
+                        //Remove particle if outside domain
+                        if(!p->cell) {
+                                lagrangian->particles = g_slist_remove(lagrangian->particles, p);
+                                g_free(p);
+                        }
+                        else {
+                                printf("Particle %d: Time step is %g time is %g velocity is %g %g %g, position is %g %g %g\n",p->id, dt, sim->time.t, p->vel.x, p->vel.y, p->vel.z, p->pos.x, p->pos.y, p->pos.z);
+                                //Advect particle according to particle velocity
+                                advect_particles(p, dt);
+				//printf("advecting particle\n");
+                        }
+
+                        i = i->next;
+                }
+
+                g_free(pars);
+    		return TRUE;
+  	}
+  	return FALSE;
 }
 
+
+
+/*Initializing l particles class*/
 static void l_particles_class_init (LParticlesClass * klass)
 {
-  /* define new methods and overload inherited methods here */
-
-  GFS_EVENT_CLASS (klass)->event = l_particles_event;
-  GTS_OBJECT_CLASS (klass)->read = l_particles_read;
-  GTS_OBJECT_CLASS (klass)->write = l_particles_write;
+  	/* define new methods and overload inherited methods here */
+  	GFS_EVENT_CLASS (klass)->event = l_particles_event;
+  	GTS_OBJECT_CLASS (klass)->read = l_particles_read;
+  	GTS_OBJECT_CLASS (klass)->write = l_particles_write;
+	GTS_OBJECT_CLASS (klass)->destroy = l_particles_destroy;
 }
 
+
+/*Initializing l particles object*/
 static void l_particles_init (LParticles * object)
 {
-  /* initialize object here */
+  	/* initialize object here */
+	object->particles = NULL;
+        object->first_call = TRUE;
+
+        object->fcoeff.init = 0;
+        object->fcoeff.fluidadv = 0;
+	object->fcoeff.RK4 = 0;
 }
 
+
+/*L Particles class*/
 LParticlesClass * l_particles_class (void)
 {
   static LParticlesClass * klass = NULL;
