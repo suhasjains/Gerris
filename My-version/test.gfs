@@ -14,8 +14,8 @@
 
   OutputTime { istep = 1 } stderr
 
-  OutputSimulation { istep = 10 } snapshot-%g.gfs 
-  #OutputSimulation { istep = 10 } snapshot-%g.vtk {format = VTK} 
+  #OutputSimulation { istep = 1 } snapshot-%g.gfs 
+  OutputSimulation { istep = 1 } snapshot-%g.vtk {format = VTK} 
 
  # GModule lagrangian
  # LagrangianParticles { istep = 1 } Par Lden { } data { }
@@ -24,7 +24,7 @@
  # ParticleList *LP { istep = 1 } GfsParticulate {1 0 0 0 0 0 1 1 1 1 1 1 }   
 
  GModule lparticles
- LParticles { istep = 1 } Par Lden { } data { } 
+ LParticles { istep = 1 } Par Lden { } data { fluidadv = 1 RK4 = 1 } 
 
 }
 GfsBox {

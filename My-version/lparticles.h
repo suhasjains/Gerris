@@ -12,10 +12,9 @@ typedef struct _LParticlesClass    LParticlesClass;
 /*Various forces acting on the particle due to its motion in the fluid*/
 typedef struct {
         Particle *p;
-        GfsVariable **u;
+        GfsVariable **u, **un;
         ForceCoefficients *fcoeffs;
-        gdouble dt;
-        LParticles *lagrangian;
+        gdouble dt, dtn;
 } ForceParams;
 
 struct _Particle {
@@ -48,6 +47,7 @@ struct _LParticles {
         guint maxid;
         gboolean first_call;
         ForceCoefficients fcoeff;
+	ForceParams pars;
 
 };
 

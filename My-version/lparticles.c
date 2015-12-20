@@ -341,12 +341,12 @@ static void l_particles_destroy (GtsObject * object) {
         g_slist_free(lagrangian->particles);
 
         g_string_free(lagrangian->name, TRUE);
-
+                
 
 }
 
 
-/*Updating the particle position*/
+/*Updating the particle position using Euler scheme*/
 static void advect_particles(Particle * p, double dt) {
 
         p->pos.x +=  dt* p->vel.x;
@@ -356,7 +356,65 @@ static void advect_particles(Particle * p, double dt) {
         #endif
 }
 
-/*Updating the particle velocity due to fluid velocity*/
+/*Updating the particle position using RK4 scheme*/
+static void advect_particles_RK4(Particle * p, double dtn, GfsVariable ** u, GfsVariable ** un) {
+
+	double k1, k2, k3, k4; 
+
+	FttVector RK4k1, RK4k2, RK4k3, RK4k4;  
+
+	if(p->cell!=NULL) {
+
+		RK4k4 = RK4k3 = RK4k2 = RK4k1 = p->pos;		
+
+		k1 = gfs_interpolate(p->cell, RK4k1, un[0]);
+		RK4k2.x = RK4k1.x + k1*dtn/2;
+		k2 = ( gfs_interpolate(p->cell, RK4k2, un[0]) + gfs_interpolate(p->cell, RK4k2, u[0]) )/2;
+		RK4k3.x = RK4k1.x + k2*dtn/2;
+		k3 = ( gfs_interpolate(p->cell, RK4k3, un[0]) + gfs_interpolate(p->cell, RK4k3, u[0]) )/2;
+		RK4k4.x = RK4k1.x + k3*dtn;
+		k4 = gfs_interpolate(p->cell, RK4k4, u[0]);
+			
+		printf("k1=%g, k2=%g, k3=%g, k4=%g, dtn=%g\n", k1, k2, k3, k4, dtn);	
+	
+		p->pos.x +=  dtn*(k1 + 2*k2 + 2*k3 + k4)/6;	
+		
+		RK4k4 = RK4k3 = RK4k2 = RK4k1;
+
+		k1 = gfs_interpolate(p->cell, RK4k1, un[1]);
+		RK4k2.y = RK4k1.y + k1*dtn/2;
+		k2 = ( gfs_interpolate(p->cell, RK4k2, un[1]) + gfs_interpolate(p->cell, RK4k2, u[1]) )/2;
+		RK4k3.y = RK4k1.y + k2*dtn/2;
+		k3 = ( gfs_interpolate(p->cell, RK4k3, un[1]) + gfs_interpolate(p->cell, RK4k3, u[1]) )/2;
+		RK4k4.y = RK4k1.y + k3*dtn;
+		k4 = gfs_interpolate(p->cell, RK4k4, u[1]);
+		
+        	
+
+		p->pos.y +=  dtn*(k1 + 2*k2 + 2*k3 + k4)/6;
+
+
+        	#if !FTT_2D
+		
+			RK4k4 = RK4k3 = RK4k2 = RK4k1;
+	
+			k1 = gfs_interpolate(p->cell, RK4k1, un[2]);
+			RK4k2.z = RK4k1.z + k1*dtn/2;
+			k2 = ( gfs_interpolate(p->cell, RK4k2, un[2]) + gfs_interpolate(p->cell, RK4k2, u[2]) )/2;
+			RK4k3.z = RK4k1.z + k2*dtn/2;
+			k3 = ( gfs_interpolate(p->cell, RK4k3, un[2]) + gfs_interpolate(p->cell, RK4k3, u[2]) )/2;
+			RK4k4.z = RK4k1.z + k3*dtn;
+			k4 = gfs_interpolate(p->cell, RK4k4, u[2]);
+		
+
+                	p->pos.z +=  dtn*(k1 + 2*k2 + 2*k3 + k4)/6;
+				
+		#endif
+
+	}
+}
+
+/*Equating current fluid velocity*/
 static void fluidadvect_particles(Particle * p, GfsVariable **u) {
 
         if(p->cell!=NULL) {
@@ -364,6 +422,19 @@ static void fluidadvect_particles(Particle * p, GfsVariable **u) {
                 p->vel.y = gfs_interpolate(p->cell, p->pos, u[1]);
                 #if !FTT_2D
                         p->vel.z = gfs_interpolate(p->cell, p->pos, u[2]);
+                #endif
+        }
+}
+
+/*Equating previous fluid velocity*/
+static void fluidadvect_particles_RK4(Particle * p, GfsVariable **un) {
+
+
+        if(p->cell!=NULL) {
+                p->vel.x = gfs_interpolate(p->cell, p->pos, un[0]);
+                p->vel.y = gfs_interpolate(p->cell, p->pos, un[1]);
+                #if !FTT_2D
+                        p->vel.z = gfs_interpolate(p->cell, p->pos, un[2]);
                 #endif
         }
 }
@@ -400,8 +471,9 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
         	LParticles *lagrangian = L_PARTICLES(event);
 
                 if(lagrangian->first_call) {
-                        lagrangian->first_call = FALSE;
-
+			
+		//printf("Yeah");
+	
                         GSList *i = lagrangian->particles;
                         lagrangian->maxid = 0;
                         while(i) {
@@ -421,21 +493,25 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
                         if(lagrangian->fcoeff.init == 1)
                                 init_particles(lagrangian, domain);
 
+
                 }
 		
 		//Fetch simulation parameters
                 GSList *i = lagrangian->particles;
                 Particle * p;
-                GfsVariable ** u = gfs_domain_velocity (domain);
-                gdouble dt = sim->advection_params.dt;
 		//printf("dt = %g \n", dt);
 
                 //Fetch force parameters
-                ForceParams * pars = g_malloc(sizeof(ForceParams));
-                pars->dt = sim->advection_params.dt;
-                pars->fcoeffs = &lagrangian->fcoeff;
-                pars->u = u;
-                pars->lagrangian = lagrangian;
+                gdouble dt = lagrangian->pars.dt = sim->advection_params.dt;
+		gdouble dtn = lagrangian->pars.dtn;
+                lagrangian->pars.fcoeffs = &lagrangian->fcoeff;
+                GfsVariable ** u = lagrangian->pars.u = gfs_domain_velocity (domain);
+		GfsVariable ** un;
+		if(lagrangian->first_call) 	
+			un = lagrangian->pars.un = u; 	
+		else 	
+			un = lagrangian->pars.un;	
+
 
                 //Looping over all particles
                 i = lagrangian->particles;
@@ -451,14 +527,14 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
                         else {
                                 //Making velocity equal to fluid velocity
                                 if(lagrangian->fcoeff.fluidadv == 1) {
-                                        fluidadvect_particles(p, pars->u);
-					printf("Making velocity equal to fluid velocity\n");
+                                        fluidadvect_particles(p, u);
+				//	printf("Using fluid velocity for advection\n");
                                 }
                                 
 				//Calculating half time velocities for RK4 advection
                                 if(lagrangian->fcoeff.RK4 == 1) {
-                                        //fluidadvect_particles_RK4(p, pars->u);
-					printf("Equating half time fluid velocity\n");
+                                        //fluidadvect_particles_RK4(p, un);
+				//	printf("Using previous time fluid velocity for advection\n");
                         	}
 			}
 
@@ -477,16 +553,26 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
                                 g_free(p);
                         }
                         else {
-                                printf("Particle %d: Time step is %g time is %g velocity is %g %g %g, position is %g %g %g\n",p->id, dt, sim->time.t, p->vel.x, p->vel.y, p->vel.z, p->pos.x, p->pos.y, p->pos.z);
-                                //Advect particle according to particle velocity
-                                advect_particles(p, dt);
-				//printf("advecting particle\n");
-                        }
+				if(lagrangian->fcoeff.RK4 == 1) {
+                                	advect_particles_RK4(p, dtn, u, un);
+					//printf("Doing RK4 advection\n");
+                                }
 
+				else {
+                                	//Advect particle according to particle velocity
+                                	advect_particles(p, dt);
+					//printf("Doing normal advection\n");
+                        	}
+			}
+                    	
+			printf("Particle %d: Time step is %g time is %g velocity is %g %g %g, position is %g %g %g\n",p->id, dt, sim->time.t, p->vel.x, p->vel.y, p->vel.z, p->pos.x, p->pos.y, p->pos.z);
                         i = i->next;
                 }
 
-                g_free(pars);
+		//Storing to be used next time step
+		lagrangian->pars.un = u;
+		lagrangian->pars.dtn = dt;
+                lagrangian->first_call = FALSE;
     		return TRUE;
   	}
   	return FALSE;
