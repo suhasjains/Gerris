@@ -1,5 +1,71 @@
 #include "lparticles.h"
+
 /* LParticles: Object */
+
+
+/*Updating the particle velocity due to forces acting on the particle*/
+static void compute_particle_velocity (Particle * p, double dt) {
+
+        p->vel.x +=  dt* p->acc.x;
+        p->vel.y +=  dt* p->acc.y;
+        #if !FTT_2D
+                p->vel.z +=  dt* p->acc.z;
+        #endif
+}
+
+/*Updating the particle acceleration*/
+static void compute_particle_acceleration(Particle *p, FttVector force, gdouble cm, gdouble fluid_rho) {
+
+        //Taking a component of the added mass force to the LHS of the momentum equation of the particle
+        p->acc.x += force.x/(p->density + fluid_rho*cm);
+        p->acc.y += force.y/(p->density + fluid_rho*cm);
+        #if !FTT_2D
+                p->acc.z += force.z/(p->density + fluid_rho*cm);
+        #endif
+}
+
+/*Calculation of the lift force acting on the unit volume of the particle*/
+static void compute_lift_force(LParticles * lagrangian) {
+
+        Particle *p = lagrangian->pars->p;
+        GfsVariable **u = pars->u;
+        gdouble fluid_rho = pars->fluid_rho;
+        FttVector *force = pars->force;
+        ForceCoefficients *fcoeffs = pars->fcoeffs;
+
+        /*Interpolating fluid velocity to obtain the value at the position of the particle*/
+        FttVector fluid_vel;
+        fluid_vel.x = gfs_interpolate(p->cell, p->pos, u[0]);
+        fluid_vel.y = gfs_interpolate(p->cell, p->pos, u[1]);
+        #if !FTT_2D
+                fluid_vel.z = gfs_interpolate(p->cell, p->pos, u[2]);
+        #endif
+
+        /*Subtrating fluid from particle velocity vectors to obtain the relative velocity */
+        FttVector relative_vel;
+        subs_fttvectors(&fluid_vel, &p->vel, &relative_vel);
+
+        /*Calculation of vorticity */
+        FttVector vorticity;
+        gfs_vorticity_vector (p->cell, u, &vorticity);
+
+        /*lift coefficient*/
+        fcoeffs->cl = 0.5;
+
+        /*lift force calculation*/
+        #if FTT_2D
+        force->x = fluid_rho*fcoeffs->cl*relative_vel.y*vorticity.z;
+        force->y = -fluid_rho*fcoeffs->cl*relative_vel.x*vorticity.z;
+        #else
+        force->x = fluid_rho*fcoeffs->cl*(relative_vel.y*vorticity.z - relative_vel.z*vorticity.y);
+        force->y = fluid_rho*fcoeffs->cl*(relative_vel.z*vorticity.x - relative_vel.x*vorticity.z);
+        force->z = fluid_rho*fcoeffs->cl*(relative_vel.x*vorticity.y - relative_vel.y*vorticity.x);
+        #endif
+
+    return;
+}
+
+
 
 
 /*Particle data read method*/
@@ -375,7 +441,7 @@ static void advect_particles_RK4(Particle * p, double dtn, GfsVariable ** u, Gfs
 		RK4k4.x = RK4k1.x + k3*dtn;
 		k4 = gfs_interpolate(p->cell, RK4k4, u[0]);
 			
-		printf("k1=%g, k2=%g, k3=%g, k4=%g, dtn=%g\n", k1, k2, k3, k4, dtn);	
+		//printf("k1=%g, k2=%g, k3=%g, k4=%g, dtn=%g\n", k1, k2, k3, k4, dtn);	
 	
 		p->pos.x +=  dtn*(k1 + 2*k2 + 2*k3 + k4)/6;	
 		
@@ -499,7 +565,10 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
 		//Fetch simulation parameters
                 GSList *i = lagrangian->particles;
                 Particle * p;
-		//printf("dt = %g \n", dt);
+		FttVector force;
+ 	       	force_pointer f;
+        	GSList *fs;
+
 
                 //Fetch force parameters
                 gdouble dt = lagrangian->pars.dt = sim->advection_params.dt;
@@ -511,6 +580,8 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
 			un = lagrangian->pars.un = u; 	
 		else 	
 			un = lagrangian->pars.un;	
+        	GfsSourceDiffusion *d = source_diffusion_viscosity(u[0]);
+		pars->force = &force;
 
 
                 //Looping over all particles
@@ -530,14 +601,43 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
                                         fluidadvect_particles(p, u);
 				//	printf("Using fluid velocity for advection\n");
                                 }
-                                
-				//Calculating half time velocities for RK4 advection
-                                if(lagrangian->fcoeff.RK4 == 1) {
-                                        //fluidadvect_particles_RK4(p, un);
-				//	printf("Using previous time fluid velocity for advection\n");
-                        	}
-			}
+				else {
+					gdouble viscosity;
+         				if(d)
+           					viscosity = gfs_diffusion_cell(d->D, p->cell);
+         				else
+           					viscosity = 0.;
 
+         				gdouble fluid_rho = sim->physical_params.alpha ? 1./
+           				gfs_function_value(sim->physical_params.alpha,p->cell) : 1.;
+
+         				p->acc.x = 0.;
+         				p->acc.y = 0.;
+         				p->acc.z = 0.;
+
+         				lagrangian->pars->p = p;
+         				lagrangian->pars->fluid_rho = fluid_rho;
+         				lagrangian->pars->viscosity = viscosity;
+
+         				fs = lagrangian->forces;
+         				while(fs){
+           					f = (force_pointer)fs->data;
+           					(f)(lagrangian);
+           					compute_particle_acceleration(p, force, lagrangian->fcoeff.cm, fluid_rho);
+           					fs = fs->next;
+         				}
+           			
+					//Particle velocity from Newton's equation	
+					compute_particle_velocity (p, dt);
+
+
+					//Computing coupling force
+         				//if(p->cell != NULL){
+           				//	particles_force(lagrangian);
+           				//	compute_coupling_force(p, lagrangian->couplingforce);
+					//}
+				 }
+			}
                         i = i->next;
                 }
 
@@ -565,7 +665,7 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
                         	}
 			}
                     	
-			printf("Particle %d: Time step is %g time is %g velocity is %g %g %g, position is %g %g %g\n",p->id, dt, sim->time.t, p->vel.x, p->vel.y, p->vel.z, p->pos.x, p->pos.y, p->pos.z);
+			printf("%d %g %g %g %g %g\n",p->id, dtn, sim->time.t-dtn, p->pos.x, p->pos.y, p->pos.z);
                         i = i->next;
                 }
 

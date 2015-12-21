@@ -1,6 +1,8 @@
 #ifndef _LPARTICLES_H_
 #define _LPARTICLES_H_
-#include "gfs.h"
+//#include "gfs.h"
+#include "event.h"
+
 
 /* LParticles: Header */
 typedef struct _Particle Particle;
@@ -15,11 +17,12 @@ typedef struct {
         GfsVariable **u, **un;
         ForceCoefficients *fcoeffs;
         gdouble dt, dtn;
+	gdouble fluid_rho, viscosity;
 } ForceParams;
 
 struct _Particle {
 
-        FttVector pos,vel;
+        FttVector pos,vel,acc;
         guint id;
         gdouble density,volume;
         FttCell *cell;
@@ -42,7 +45,7 @@ struct _LParticles {
 	GString *name;
         GfsVariable *density;
         GfsVariable *reynolds;
-
+	GSList *forces;
         GSList *particles;
         guint maxid;
         gboolean first_call;
