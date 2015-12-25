@@ -26,7 +26,7 @@ typedef void (*force_pointer) (ForceParams *pars);
 
 struct _Particle {
 
-        FttVector pos,vel,acc;
+        FttVector pos,vel,acc,phiforce;
         guint id;
         gdouble density,volume;
         FttCell *cell;
@@ -56,6 +56,7 @@ struct _LParticles {
         GfsVariable *density;
         GfsVariable *reynolds;
 	GfsVariable **un;
+	GfsVariable **couplingforce;
 	GSList *forces;
         GSList *particles;
         guint maxid;

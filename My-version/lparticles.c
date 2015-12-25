@@ -2,6 +2,169 @@
 
 /* LParticles: Object */
 
+//initialize coupling force
+static void couple_force_init(FttCell *c, GfsVariable * f)
+{
+//  GFS_VARIABLE(c, f->i) = 0.;
+	GFS_VALUE(c, f) = 0.;
+}
+
+//resetting coupling force
+static void reset_couple_force (GfsDomain *domain, GfsVariable **f)
+{
+  FttComponent c;
+  FttDirection d;
+  for(c = 0; c < FTT_DIMENSION; c++){
+    gfs_domain_cell_traverse (domain, FTT_PRE_ORDER, FTT_TRAVERSE_ALL, -1,
+                              (FttCellTraverseFunc)couple_force_init,
+                              f[c]);
+  }
+}
+
+
+
+/*Create force variable for the domain*/
+static void couple_force_define(GfsDomain * d, GfsVariable **force, GString * s)
+{
+
+  force[0] = gfs_domain_get_or_add_variable(d, g_strconcat(s->str, "x", NULL),
+                                            "x-component of the Lagrangian Particle Force");
+  force[1] = gfs_domain_get_or_add_variable(d, g_strconcat(s->str, "y", NULL),
+                                            "y-component of the Lagrangian Particle Force");
+#if !FTT_2D
+  force[2] = gfs_domain_get_or_add_variable(d, g_strconcat(s->str, "z", NULL),
+                                            "z-component of the Lagrangian Particle Force");
+#endif
+}
+
+
+/*Smoothening the force using Gaussian smoothing Exp(-x^2/sigma^2)*/
+static void compute_smooth_force(FttCell *cell, gpointer * data)
+{
+  if(!cell) return;
+
+  Particle *p = (Particle *)(data[0]);
+  GfsVariable **f = data[1];
+  gdouble sigma = *(gdouble *)data[2];
+  FttVector pos;
+  ftt_cell_pos(cell, &pos);
+
+
+  gdouble dist = (p->pos.x - pos.x)*(p->pos.x - pos.x)
+    + (p->pos.y - pos.y)*(p->pos.y - pos.y);
+
+#if !FTT_2D
+    dist += (p->pos.z - pos.z)*(p->pos.z - pos.z);
+#endif
+    dist = exp(-dist/(sigma*sigma))/(2.*M_PI*sigma*sigma);
+#if !FTT_2D
+    dist /= (pow(2.*M_PI,0.5)*sigma);
+#endif
+   dist /= (pow(2.*M_PI,0.5)*sigma);
+
+//  GFS_VARIABLE(cell, f[0]->i) += p->phiforce.x*dist;
+//  GFS_VARIABLE(cell, f[1]->i) += p->phiforce.y*dist;
+//#if !FTT_2D
+//  GFS_VARIABLE(cell, f[2]->i) += p->phiforce.z*dist;
+//#endif
+  GFS_VALUE(cell, f[0]) += p->phiforce.x*dist;
+  GFS_VALUE(cell, f[1]) += p->phiforce.y*dist;
+#if !FTT_2D
+  GFS_VALUE(cell, f[2]) += p->phiforce.z*dist;
+#endif
+}
+
+
+static gboolean check_stencil(FttCell * cell, FttVector pos0, gdouble sigma, FttDirection *d)
+{
+  if(!cell) return FALSE;
+
+  gdouble size = ftt_cell_size(cell);
+  FttVector pos1;
+  ftt_cell_pos(cell, &pos1);
+
+  FttDirection d0;
+  gdouble dist, dist1;
+  gboolean check = TRUE;
+  for(d0 = 0; d0 < FTT_DIMENSION; d0++){
+    dist = abs(((&pos1.x)[d0] - size/2.0 - (&pos0.x)[d0]));
+    dist1 = abs(((&pos1.x)[d0] + size/2.0 - (&pos0.x)[d0]));
+
+    if(dist < dist1)
+      d[d0] = 2.0*d0;
+    else
+      d[d0] = 2.0*d0 + 1;
+
+    if(dist > sigma || dist1 > sigma)
+      check = FALSE;
+  }
+
+  return check;
+}
+
+
+
+
+/*Gaussian Smoothed Two-way Coupling Force: Applied only on 3Sigma surroundings*/
+static void compute_coupling_force (Particle *p, GfsVariable **f)
+{
+  	if(!p->cell) return;
+
+  	gpointer data[3];
+  	data[0] = p;
+  	data[1] = f;
+
+  	gdouble size = ftt_cell_size(p->cell);
+  	gdouble radius = pow(p->volume/M_PI,1./2.);
+	#if !FTT_2D
+  		radius = pow(3.0*(p->volume)/4.0/M_PI, 1./3.);
+	#endif
+
+ 	gdouble sigma = MAX(2.*radius, size)/2.;
+  	data[2] = &sigma;
+
+  	FttCell *cell = p->cell, *neighbor1, *neighbor2;
+  	FttDirection d[FTT_DIMENSION];
+  	while(!FTT_CELL_IS_ROOT(cell) && ftt_cell_parent(cell) && check_stencil(cell, p->pos, 3.*sigma, d)){
+    		cell = ftt_cell_parent(cell);
+  	}
+
+
+  	g_assert(cell!=NULL);
+
+  	ftt_cell_traverse (cell, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1, (FttCellTraverseFunc) compute_smooth_force, data);
+
+  	FttDirection d0, d1;
+  	for(d0 = 0; d0 < FTT_DIMENSION; d0++){
+    		neighbor1 = ftt_cell_neighbor(cell, d[d0]);
+    		if(neighbor1)
+      			ftt_cell_traverse (neighbor1, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,(FttCellTraverseFunc) compute_smooth_force, data);
+    		else
+      			continue;
+  
+		/*   Do for neighbor if it exists else continue */
+    		for(d1 = d0 + 1; d1 < FTT_DIMENSION; d1++){
+      			neighbor2 = ftt_cell_neighbor(neighbor1, d[d1]);
+      			if(neighbor2){
+        			ftt_cell_traverse (neighbor2, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,(FttCellTraverseFunc) compute_smooth_force, data);
+      			}
+    		}
+  	}
+	
+	#if !FTT_2D
+  	/*Corner Cell*/
+  		neighbor1 = ftt_cell_neighbor(cell, d[0]);
+  		if(neighbor1)
+    			neighbor1 = ftt_cell_neighbor(neighbor1, d[1]);
+  		if(neighbor1)
+    			neighbor1 = ftt_cell_neighbor(neighbor1, d[2]);
+  		if(neighbor1)
+    			ftt_cell_traverse (neighbor1, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,(FttCellTraverseFunc) compute_smooth_force, data);
+	#endif
+
+}
+
+
 
 
 /*Updating the particle velocity due to forces acting on the particle*/
@@ -382,6 +545,46 @@ static void compute_buoyant_force(ForceParams * pars) {
 
 }
 
+//Forces on fluid due to particles
+static void particles_force(ForceParams * pars)
+{
+  Particle *p = pars->p;
+  FttVector * force = pars->force;
+  gdouble fluid_rho = pars->fluid_rho;
+  ForceCoefficients * fcoeffs = pars->fcoeffs;
+
+  if(p->cell==NULL)
+    return;
+
+  gdouble p3dvolume = p->volume;
+
+  p->phiforce.x = -p->acc.x*(p->density)* p3dvolume;
+  p->phiforce.y = -p->acc.y*(p->density)* p3dvolume;
+  p->phiforce.z = -p->acc.z*(p->density)* p3dvolume;
+
+  if(fcoeffs->buoy == 1){
+    compute_buoyant_force(pars);
+    p->phiforce.x += ((force->x)* p3dvolume);
+    p->phiforce.y += ((force->y)* p3dvolume);
+    p->phiforce.z += ((force->z)* p3dvolume);
+  }
+
+  if(fcoeffs->inertial == 1){
+    compute_inertial_force(pars);
+    p->phiforce.x += ((force->x)* p3dvolume);
+    p->phiforce.y += ((force->y)* p3dvolume);
+    p->phiforce.z += ((force->z)* p3dvolume);
+  }
+
+
+  p->phiforce.x /=(pars->fluid_rho);
+  p->phiforce.y /=(pars->fluid_rho);
+  p->phiforce.z /=(pars->fluid_rho);
+
+}
+
+
+
 
 
 /*Particle data read method*/
@@ -522,7 +725,12 @@ static void l_particles_read (GtsObject ** o, GtsFile * fp)
   	if (fp->type == GTS_STRING) {
     		lagrangian->name = g_string_new(fp->token->str);
 		//printf("Name of the new lagrangian variable is = %s\n", (lagrangian->name)->str);	
-    		gts_file_next_token (fp);
+    		
+		lagrangian->couplingforce = g_malloc(sizeof(GfsVariable));
+     		couple_force_define(domain, lagrangian->couplingforce, lagrangian->name);
+
+
+		gts_file_next_token (fp);
   	}
   	else {
     		gts_file_error (fp, "expecting a string");
@@ -850,6 +1058,10 @@ static void l_particles_destroy (GtsObject * object) {
 //	if(lagrangian->fcoeff.camf)
 //		g_free(lagrangian->fcoeff.camf);
 
+	if(lagrangian->couplingforce)
+   		g_free(lagrangian->couplingforce);
+
+
 
 }
 
@@ -1059,6 +1271,9 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
 		pars->lagrangian = lagrangian;
 
 
+
+		reset_couple_force (domain, lagrangian->couplingforce);
+
                 //Looping over all particles
                 i = lagrangian->particles;
                 while(i) {
@@ -1108,10 +1323,10 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
 
 
 					//Computing coupling force
-         				//if(p->cell != NULL){
-           				//	particles_force(lagrangian);
-           				//	compute_coupling_force(p, lagrangian->couplingforce);
-					//}
+         				if(p->cell != NULL){
+           					particles_force(pars);
+           					compute_coupling_force(p, lagrangian->couplingforce);
+					}
 				 }
 			}
                         i = i->next;
