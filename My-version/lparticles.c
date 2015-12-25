@@ -3,6 +3,7 @@
 /* LParticles: Object */
 
 
+
 /*Updating the particle velocity due to forces acting on the particle*/
 static void compute_particle_velocity (Particle * p, double dt) {
 
@@ -14,8 +15,8 @@ static void compute_particle_velocity (Particle * p, double dt) {
 }
 
 /*Updating the particle acceleration*/
-static void compute_particle_acceleration(Particle *p, FttVector force, gdouble cm, gdouble fluid_rho) {
-
+static void compute_particle_acceleration(Particle *p, FttVector force,gdouble cm, gdouble fluid_rho) {
+        
         //Taking a component of the added mass force to the LHS of the momentum equation of the particle
         p->acc.x += force.x/(p->density + fluid_rho*cm);
         p->acc.y += force.y/(p->density + fluid_rho*cm);
@@ -24,10 +25,63 @@ static void compute_particle_acceleration(Particle *p, FttVector force, gdouble 
         #endif
 }
 
-/*Calculation of the lift force acting on the unit volume of the particle*/
-static void compute_lift_force(LParticles * lagrangian) {
+/*Same as in source.c used here to obtained viscosity*/
+static GfsSourceDiffusion * source_diffusion_viscosity (GfsVariable * v)
+{
+  	if (v->sources) {
+    		GSList * i = GTS_SLIST_CONTAINER (v->sources)->items;
 
-        Particle *p = lagrangian->pars->p;
+    		while (i) {
+      			GtsObject * o = i->data;
+	
+      			if (GFS_IS_SOURCE_DIFFUSION (o))
+        			return GFS_SOURCE_DIFFUSION (o);
+      			i = i->next;
+    		}
+  	}
+  	return NULL;
+}
+
+
+/*Calculation of vorticity vector*/
+static void gfs_vorticity_vector (FttCell *cell, GfsVariable **v, FttVector *vort) {
+
+        gdouble size;
+
+        if (cell == NULL) return;
+        if (v == NULL) return;
+
+        size = ftt_cell_size (cell);
+
+        #if FTT_2D
+
+        vort->x = 0.;
+        vort->y = 0.;
+        vort->z = (gfs_center_gradient (cell, FTT_X, v[1]->i) - gfs_center_gradient (cell, FTT_Y, v[0]->i))/size;
+
+        #else /*FTT_3D*/
+
+        vort->x = (gfs_center_gradient (cell, FTT_Y, v[2]->i) - gfs_center_gradient (cell, FTT_Z, v[1]->i))/size;
+        vort->y = (gfs_center_gradient (cell, FTT_Z, v[0]->i) - gfs_center_gradient (cell, FTT_X, v[2]->i))/size;
+        vort->z = (gfs_center_gradient (cell, FTT_X, v[1]->i) - gfs_center_gradient (cell, FTT_Y, v[0]->i))/size;
+        #endif
+}
+
+
+/*Subtraction of two vectors*/
+static void subs_fttvectors (FttVector *a, FttVector *b, FttVector *result) {
+
+        result->x  = a->x - b->x;
+        result->y  = a->y - b->y;
+        result->z  = a->z - b->z;
+}
+
+
+/*Calculation of the lift force acting on the unit volume of the particle*/
+static void compute_lift_force(ForceParams *pars) {
+
+
+        Particle *p = pars->p;
         GfsVariable **u = pars->u;
         gdouble fluid_rho = pars->fluid_rho;
         FttVector *force = pars->force;
@@ -65,6 +119,268 @@ static void compute_lift_force(LParticles * lagrangian) {
     return;
 }
 
+/*Calculation of drag force acting on the unit volume of the particle */
+static void compute_drag_force (ForceParams *pars) {
+
+        Particle *p = pars->p;
+        GfsVariable **u = pars->u;
+        gdouble fluid_rho = pars->fluid_rho;
+        gdouble viscosity = pars->viscosity;
+        ForceCoefficients *fcoeffs = pars->fcoeffs;
+        FttVector *force = pars->force;
+
+
+        /*Interpolating fluid velocity to obtain the value at the position of the particle*/
+        FttVector fluid_vel;
+        fluid_vel.x = gfs_interpolate(p->cell, p->pos, u[0]);
+        fluid_vel.y = gfs_interpolate(p->cell, p->pos, u[1]);
+        #if !FTT_2D
+                fluid_vel.z = gfs_interpolate(p->cell, p->pos, u[2]);
+        #endif
+
+        /*Subtrating fluid from particle velocity vectors to obtain the relative velocity */
+        FttVector relative_vel;
+        subs_fttvectors(&fluid_vel, &p->vel, &relative_vel);
+
+        gdouble radius;
+        radius = pow(p->volume/M_PI, 1./2.);
+        #if !FTT_2D
+        radius = pow(3.0*(p->volume)/4.0/M_PI, 1./3.);
+        #endif
+
+	/* Calculation of the magnitude of the relative velocity*/
+        #if !FTT_2D                     
+        gdouble norm_relative_vel = sqrt(relative_vel.x*relative_vel.x +
+                                        relative_vel.y*relative_vel.y +
+                                        relative_vel.z*relative_vel.z);
+        #else
+        gdouble norm_relative_vel = sqrt(relative_vel.x*relative_vel.x +
+                                        relative_vel.y*relative_vel.y);
+        #endif
+
+
+        /* Calculation of Reynolds number */
+        gdouble Re;
+        if(viscosity == 0){
+                force->x = 0.;
+                force->y = 0.;
+                force->z = 0.;
+        return;
+        }
+        else
+        Re = 2.*norm_relative_vel*radius*fluid_rho/viscosity;
+
+	//printf("Re=%g\n",Re);
+	if(fcoeffs->cdrag){
+
+        ///GFS_VARIABLE has only 1 arguments - I dont understand this
+//        GFS_VARIABLE(p->cell, pars->lagrangian->reynolds->i) = Re;
+
+//        GFS_VARIABLE(p->cell, pars->lagrangian->urel->i) = relative_vel.x;
+
+//        GFS_VARIABLE(p->cell, pars->lagrangian->vrel->i) = relative_vel.y;
+
+        #if !FTT_2D
+//        GFS_VARIABLE(p->cell, pars->lagrangian->wrel->i) = relative_vel.z;
+        #endif
+
+//        GFS_VARIABLE(p->cell, pars->lagrangian->pdia->i) = 2.0*radius;
+
+        fcoeffs->cd = gfs_function_value (fcoeffs->cdrag, p->cell);
+        force->x = fcoeffs->cd*relative_vel.x*fluid_rho;
+        force->y = fcoeffs->cd*relative_vel.y*fluid_rho;
+        force->z = fcoeffs->cd*relative_vel.z*fluid_rho;
+
+        return;
+        }
+
+        if(Re < 1e-8){
+                force->x = 0.;
+                force->y = 0.;
+                force->z = 0.;
+                return;
+        }
+        else if(Re < 50.0)
+                fcoeffs->cd = 16.*(1. + 0.15*pow(Re,0.5))/Re;
+        else
+                fcoeffs->cd = 48.*(1. - 2.21/pow(Re,0.5))/Re;
+	//printf("cd=%g\n",fcoeffs->cd);
+
+        force->x = 3./(8.*radius)*fcoeffs->cd*norm_relative_vel*relative_vel.x*fluid_rho;
+        force->y = 3./(8.*radius)*fcoeffs->cd*norm_relative_vel*relative_vel.y*fluid_rho;
+        force->z = 3./(8.*radius)*fcoeffs->cd*norm_relative_vel*relative_vel.z*fluid_rho;
+
+}
+
+
+
+/*Calculation of the inertial forces on the unit volume of the particle*/
+static void compute_inertial_force(ForceParams * pars) {
+        Particle *p = pars->p;
+        GfsVariable **u = pars->u;
+        gdouble fluid_rho = pars->fluid_rho;
+        FttVector * force = pars->force;
+
+        GfsVariable **un = pars->un;
+        gdouble dt = pars->dt;
+
+        gdouble size = ftt_cell_size(p->cell);
+
+
+        FttVector fluid_vel;
+        FttVector fluid_veln;
+        fluid_vel.x = gfs_interpolate(p->cell, p->pos, u[0]);
+        fluid_vel.y = gfs_interpolate(p->cell, p->pos, u[1]);
+
+        fluid_veln.x = gfs_interpolate(p->cell, p->pos, un[0]);
+        fluid_veln.y = gfs_interpolate(p->cell, p->pos, un[1]);
+        #if !FTT_2D
+                fluid_vel.z = gfs_interpolate(p->cell, p->pos, u[2]);
+                fluid_veln.z = gfs_interpolate(p->cell, p->pos, un[2]);
+        #endif
+
+        /*Calculation of local derivative*/
+        if(dt > 0.){
+                force->x = fluid_rho*(fluid_vel.x - fluid_veln.x)/dt;
+                force->y = fluid_rho*(fluid_vel.y - fluid_veln.y)/dt;
+        #if !FTT_2D
+                force->z = fluid_rho*(fluid_vel.z - fluid_veln.z)/dt;
+        #endif
+        }
+
+        ///GFS_VARIABLE has only one argument
+        ///Gradient is already normalized by the size of the cell.
+//      FttComponent c;
+//        for(c=0;c < FTT_DIMENSION;c++){
+//                force->x += fluid_rho*gfs_center_gradient(p->cell, c, u[0]->i)*
+//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
+//                force->y += fluid_rho*gfs_center_gradient(p->cell, c, u[1]->i)*
+//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
+//        #if !FTT_2D
+//                force->z += fluid_rho*gfs_center_gradient(p->cell, c, u[2]->i)*
+//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
+//        #endif
+
+        /*Appending Convective derivative to local derivative to get the total force*/
+        FttComponent c;
+        for(c=0;c < FTT_DIMENSION;c++){
+                force->x += fluid_rho*gfs_center_gradient(p->cell, c, u[0]->i)*GFS_VALUE(p->cell, u[c])/size;
+                force->y += fluid_rho*gfs_center_gradient(p->cell, c, u[1]->i)*GFS_VALUE(p->cell, u[c])/size;
+        #if !FTT_2D
+                force->z += fluid_rho*gfs_center_gradient(p->cell, c, u[2]->i)*GFS_VALUE(p->cell, u[c])/size;
+	#endif
+        }
+}
+
+
+/*Calculation of the added mass force acting on the unit volume of the particle*/
+static void compute_amf_force(ForceParams * pars) {
+
+        Particle *p = pars->p;
+        GfsVariable **u = pars->u;
+        gdouble fluid_rho = pars->fluid_rho;
+        FttVector * force = pars->force;
+        ForceCoefficients * fcoeffs = pars->fcoeffs;
+
+        GfsVariable **un = pars->un;
+        gdouble dt = pars->dt;
+
+        gdouble size = ftt_cell_size(p->cell);
+
+        FttVector fluid_vel;
+        FttVector fluid_veln;
+        fluid_vel.x = gfs_interpolate(p->cell, p->pos, u[0]);
+        fluid_vel.y = gfs_interpolate(p->cell, p->pos, u[1]);
+
+        fluid_veln.x = gfs_interpolate(p->cell, p->pos, un[0]);
+        fluid_veln.y = gfs_interpolate(p->cell, p->pos, un[1]);
+        #if !FTT_2D
+                fluid_vel.z = gfs_interpolate(p->cell, p->pos, u[2]);
+                fluid_veln.z = gfs_interpolate(p->cell, p->pos, un[2]);
+        #endif
+
+        /*Calculation of local derivative*/
+        if(dt > 0.){
+                force->x = fluid_rho*(fluid_vel.x - fluid_veln.x)/dt;
+                force->y = fluid_rho*(fluid_vel.y - fluid_veln.y)/dt;
+        #if !FTT_2D
+                force->z = fluid_rho*(fluid_vel.z - fluid_veln.z)/dt;
+        #endif
+        }
+
+        ///GFS_VARIABLE takes only 1 argument
+        ///gfs_center_gradient is normalized by cell size
+//        FttComponent c;
+//        for(c = 0; c < FTT_DIMENSION; c++){
+//                force->x += fluid_rho*gfs_center_gradient(p->cell, c, u[0]->i)*
+//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
+//                force->y += fluid_rho*gfs_center_gradient(p->cell, c, u[1]->i)*
+//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
+//        #if !FTT_2D
+//                force->z += fluid_rho*gfs_center_gradient(p->cell, c, u[2]->i)*
+//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
+//        #endif
+
+	/*Appending Convective derivative to local derivative to get the total force*/
+        FttComponent c;
+        for(c=0;c < FTT_DIMENSION;c++){
+                force->x += fluid_rho*gfs_center_gradient(p->cell, c, u[0]->i)*GFS_VALUE(p->cell, u[c])/size;
+                force->y += fluid_rho*gfs_center_gradient(p->cell, c, u[1]->i)*GFS_VALUE(p->cell, u[c])/size;
+        #if !FTT_2D
+                force->z += fluid_rho*gfs_center_gradient(p->cell, c, u[2]->i)*GFS_VALUE(p->cell, u[c])/size;
+        #endif
+
+   	}
+
+        ///Particle velocity subtraction is missing - done later while calculating the particle acceleration 
+//      force->x -= fluid_rho*p->acc.x;
+//      force->y -= fluid_rho*p->acc.y;
+//      force->z -= fluid_rho*p->acc.z; 
+
+	//coefficient
+	fcoeffs->cm = 0.5;
+
+        //Coefficient
+        force->x = fcoeffs->cm*force->x;
+        force->y = fcoeffs->cm*force->y;
+        force->z = fcoeffs->cm*force->z;
+}
+
+
+/*Calculation of the buoyant forces acting on the unit volume of the particle*/
+static void compute_buoyant_force(ForceParams * pars) {
+
+        Particle *p = pars->p;
+        GfsVariable **u = pars->u;
+        gdouble fluid_rho = pars->fluid_rho;
+        FttVector * force = pars->force;
+        gdouble g[3];
+        FttComponent c;
+
+        //getting gravity directly from the sources
+        for(c = 0; c < FTT_DIMENSION; c++){
+                g[c] = 0.;
+                if (u[c]->sources) {
+                        GSList * i = GTS_SLIST_CONTAINER (u[c]->sources)->items;
+
+                while (i) {
+                        if (GFS_IS_SOURCE (i->data)) {
+                                g[c] += gfs_function_value (GFS_SOURCE ((GfsSourceGeneric *) i->data)->intensity,
+                                                                p->cell);
+                        }
+                        i = i->next;
+                }
+                }
+        }
+
+        ///p->density-fluid_rho is not defined
+        force->x = (p->density - fluid_rho)*g[0];
+        force->y = (p->density - fluid_rho)*g[1];
+        #if !FTT_2D
+        force->z = (p->density - fluid_rho)*g[2];
+        #endif
+
+}
 
 
 
@@ -155,6 +471,37 @@ static void assign_val_vars (guint * f, GtsFile *fp, GtsObject *o) {
   	gts_file_next_token (fp);
 
 }
+
+static void assign_val_funcs (GfsFunction * f, GtsFile *fp, LParticles *o) {
+
+  	GfsDomain * domain = GFS_DOMAIN(gfs_object_simulation (o));
+
+
+  	gts_file_next_token (fp);
+  	if (fp->type != '=') {
+    		gts_file_error (fp, "expecting `='");
+    		return;
+  	}
+
+  	gts_file_next_token (fp);
+  	gfs_function_read (f, domain, fp);
+
+  	if (fp->type == GTS_ERROR) {
+    		gts_file_error (fp, "Trouble reading function for Force Coeffs in GfsLagrangianParticles module");
+    		gts_object_destroy (GTS_OBJECT (f));
+  	  	return;
+  	}
+}
+
+static void previous_time_vel(GfsDomain *d, GfsVariable **un) {
+
+  	un[0] = gfs_domain_get_or_add_variable(d, "Un", "x-component of Velocity at previous time step");
+  	un[1] = gfs_domain_get_or_add_variable(d, "Vn", "y-component of Velocity at previous time step");
+	#if !FTT_2D
+  		un[2] = gfs_domain_get_or_add_variable(d, "Wn", "z-component of Velocity at previous time step");
+	#endif
+}
+
 
 
 
@@ -331,6 +678,36 @@ static void l_particles_read (GtsObject ** o, GtsFile * fp)
 			else if(g_ascii_strcasecmp(fp->token->str, "fluidadv") == 0)
 	        		assign_val_vars (&lagrangian->fcoeff.fluidadv, fp, *o);
 			
+			else if(g_ascii_strcasecmp(fp->token->str, "lift") == 0)
+			        assign_val_vars (&lagrangian->fcoeff.lift, fp, *o);
+
+      			else if(g_ascii_strcasecmp(fp->token->str, "drag") == 0)
+        			assign_val_vars (&lagrangian->fcoeff.drag, fp, *o);
+
+      			else if(g_ascii_strcasecmp(fp->token->str, "amf") == 0) {
+			        assign_val_vars (&lagrangian->fcoeff.amf, fp, *o);}
+			
+			else if(g_ascii_strcasecmp(fp->token->str, "buoy") == 0)
+		        	assign_val_vars (&lagrangian->fcoeff.buoy, fp, *o);
+
+			else if(g_ascii_strcasecmp(fp->token->str, "cdrag") == 0){
+			        lagrangian->fcoeff.cdrag = gfs_function_new (gfs_function_class (), 0.);
+        			assign_val_funcs (lagrangian->fcoeff.cdrag, fp, lagrangian);
+      			}
+
+      			else if(g_ascii_strcasecmp(fp->token->str, "clift") == 0){
+        			lagrangian->fcoeff.clift = gfs_function_new (gfs_function_class (), 0.);
+        			assign_val_funcs (lagrangian->fcoeff.clift, fp, lagrangian);
+      			}
+		
+			else if(g_ascii_strcasecmp(fp->token->str, "camf") == 0){
+			        lagrangian->fcoeff.camf = gfs_function_new (gfs_function_class (), 0.);
+        			assign_val_funcs (lagrangian->fcoeff.camf, fp, lagrangian);
+      			}
+
+			else if(g_ascii_strcasecmp(fp->token->str, "inertial") == 0)
+        			assign_val_vars (&lagrangian->fcoeff.inertial, fp, *o);
+
 			else if(g_ascii_strcasecmp(fp->token->str, "RK4") == 0)
 	        		assign_val_vars (&lagrangian->fcoeff.RK4, fp, *o);
 			else{
@@ -346,6 +723,40 @@ static void l_particles_read (GtsObject ** o, GtsFile * fp)
   	}	
 	
 	fp->scope_max--;
+
+	lagrangian->forces = NULL;
+  	force_pointer f;
+
+  	if(lagrangian->fcoeff.lift == 1){
+    		f = &compute_lift_force;
+    		lagrangian->forces = g_slist_append(lagrangian->forces, f);
+  	}
+
+  	if(lagrangian->fcoeff.drag == 1){
+    		f = &compute_drag_force;
+    		lagrangian->forces = g_slist_append(lagrangian->forces, f);
+  	}
+
+  	if(lagrangian->fcoeff.inertial == 1){
+    		f = &compute_inertial_force;
+    		lagrangian->forces = g_slist_append(lagrangian->forces, f);
+  	}
+
+	if(lagrangian->fcoeff.amf == 1){
+		f = &compute_amf_force;
+    		lagrangian->forces = g_slist_append(lagrangian->forces, f);
+  	}
+
+	if(lagrangian->fcoeff.buoy == 1){
+    		f = &compute_buoyant_force;
+    		lagrangian->forces = g_slist_append(lagrangian->forces, f);
+  	}
+
+
+
+	lagrangian->un = g_malloc(sizeof(GfsVariable));
+  	previous_time_vel(domain, lagrangian->un);
+
 
  	/* do not forget to prepare for next read */
   	gts_file_next_token (fp);
@@ -371,6 +782,28 @@ static void l_particles_write (GtsObject * o, FILE * fp)
                 fprintf(fp, " fluidadv = 1");
 	if(lagrangian->fcoeff.RK4 == 1)
 		fprintf(fp, " RK = 1 ");
+	if(lagrangian->fcoeff.lift == 1)
+             	fprintf(fp, " lift = 1");
+     	if(lagrangian->fcoeff.drag == 1)
+             	fprintf(fp, " drag = 1");
+	if(lagrangian->fcoeff.inertial == 1)
+             fprintf(fp, " inertial = 1");
+	if(lagrangian->fcoeff.amf == 1)
+                fprintf(fp, " amf = 1");
+     	if(lagrangian->fcoeff.buoy == 1)
+                 fprintf(fp, " buoy = 1");
+	if(lagrangian->fcoeff.cdrag){
+                fprintf(fp, " cdrag = ");
+        	gfs_function_write(lagrangian->fcoeff.cdrag,fp);
+        }
+        if(lagrangian->fcoeff.clift){
+                fprintf(fp, " clift = ");
+                gfs_function_write(lagrangian->fcoeff.clift,fp);
+        }
+	if(lagrangian->fcoeff.camf){
+                fprintf(fp, " camf = ");
+                gfs_function_write(lagrangian->fcoeff.camf,fp);
+        }
 	fprintf (fp," } \n");
 
 	//write particles data
@@ -395,7 +828,7 @@ static void l_particles_write (GtsObject * o, FILE * fp)
 static void l_particles_destroy (GtsObject * object) {
 
         /* do not forget to call destroy method of the parent */
-        (* GTS_OBJECT_CLASS (l_particles_class ())->parent_class->destroy) (    object);
+        (* GTS_OBJECT_CLASS (l_particles_class ())->parent_class->destroy) ( object);
 
         /* do object-specific cleanup here */
         LParticles * lagrangian = L_PARTICLES(object);
@@ -407,7 +840,16 @@ static void l_particles_destroy (GtsObject * object) {
         g_slist_free(lagrangian->particles);
 
         g_string_free(lagrangian->name, TRUE);
-                
+        
+	if(lagrangian->fcoeff.cdrag)
+    		g_free(lagrangian->fcoeff.cdrag);
+
+  	if(lagrangian->fcoeff.clift)
+    		g_free(lagrangian->fcoeff.clift);
+  
+//	if(lagrangian->fcoeff.camf)
+//		g_free(lagrangian->fcoeff.camf);
+
 
 }
 
@@ -527,6 +969,35 @@ static void init_particles(LParticles * l, GfsDomain *domain) {
         }
 }
 
+/*Copying value for previous time*/
+static void copy_cell_gfsvariable(FttCell *c, gpointer * data) {
+        GfsVariable * v1 = (GfsVariable *) data[0];
+        GfsVariable * v2 = (GfsVariable *) data[1];
+
+        GFS_VALUE(c, v1) = GFS_VALUE(c, v2);
+
+}
+
+
+
+/*Storing previous time step value*/
+static void store_domain_previous_vel(GfsDomain *d, GfsVariable **un)
+{
+  	GfsVariable ** u = gfs_domain_velocity (d);
+  	FttComponent c;
+  	for(c = 0; c < FTT_DIMENSION; c++){
+    		gpointer data[2];
+
+    		data[0] = un[c];
+    		data[1] = u[c];
+    		gfs_domain_cell_traverse (d, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+                              (FttCellTraverseFunc)copy_cell_gfsvariable,
+                              data);
+  	}
+}
+
+
+
 
 static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
 {
@@ -560,6 +1031,7 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
                                 init_particles(lagrangian, domain);
 
 
+		store_domain_previous_vel(domain, lagrangian->un);
                 }
 		
 		//Fetch simulation parameters
@@ -571,17 +1043,20 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
 
 
                 //Fetch force parameters
-                gdouble dt = lagrangian->pars.dt = sim->advection_params.dt;
-		gdouble dtn = lagrangian->pars.dtn;
-                lagrangian->pars.fcoeffs = &lagrangian->fcoeff;
-                GfsVariable ** u = lagrangian->pars.u = gfs_domain_velocity (domain);
-		GfsVariable ** un;
-		if(lagrangian->first_call) 	
-			un = lagrangian->pars.un = u; 	
-		else 	
-			un = lagrangian->pars.un;	
+                ForceParams *pars = g_malloc(sizeof(ForceParams));
+		gdouble dt = pars->dt = sim->advection_params.dt;
+		//gdouble dtn = pars->dtn;
+                pars->fcoeffs = &lagrangian->fcoeff;
+                GfsVariable ** u = pars->u = gfs_domain_velocity (domain);
+		pars->un = lagrangian->un;
+		//GfsVariable ** un;
+		//if(lagrangian->first_call) 	
+		//	un = lagrangian->pars.un = u; 	
+		//else 	
+		//	un = lagrangian->pars.un;	
         	GfsSourceDiffusion *d = source_diffusion_viscosity(u[0]);
 		pars->force = &force;
+		pars->lagrangian = lagrangian;
 
 
                 //Looping over all particles
@@ -615,15 +1090,16 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
          				p->acc.y = 0.;
          				p->acc.z = 0.;
 
-         				lagrangian->pars->p = p;
-         				lagrangian->pars->fluid_rho = fluid_rho;
-         				lagrangian->pars->viscosity = viscosity;
+         				pars->p = p;
+         				pars->fluid_rho = fluid_rho;
+         				pars->viscosity = viscosity;
+
 
          				fs = lagrangian->forces;
          				while(fs){
            					f = (force_pointer)fs->data;
-           					(f)(lagrangian);
-           					compute_particle_acceleration(p, force, lagrangian->fcoeff.cm, fluid_rho);
+           					(f)(pars);
+           					compute_particle_acceleration(p, force, pars->fcoeffs->cm, fluid_rho);
            					fs = fs->next;
          				}
            			
@@ -653,26 +1129,28 @@ static gboolean l_particles_event (GfsEvent * event, GfsSimulation * sim)
                                 g_free(p);
                         }
                         else {
-				if(lagrangian->fcoeff.RK4 == 1) {
-                                	advect_particles_RK4(p, dtn, u, un);
+				//if(lagrangian->fcoeff.RK4 == 1) {
+                                //	advect_particles_RK4(p, dtn, u, un);
 					//printf("Doing RK4 advection\n");
-                                }
+                                //}
 
-				else {
+				//else {
                                 	//Advect particle according to particle velocity
                                 	advect_particles(p, dt);
 					//printf("Doing normal advection\n");
-                        	}
+                        	//}
 			}
                     	
-			printf("%d %g %g %g %g %g\n",p->id, dtn, sim->time.t-dtn, p->pos.x, p->pos.y, p->pos.z);
+			printf("%d %g %g %g %g %g\n",p->id, dt, sim->time.t, p->pos.x, p->pos.y, p->pos.z);
                         i = i->next;
                 }
 
 		//Storing to be used next time step
-		lagrangian->pars.un = u;
-		lagrangian->pars.dtn = dt;
-                lagrangian->first_call = FALSE;
+		//lagrangian->pars.un = u;
+		//lagrangian->pars.dtn = dt;
+                store_domain_previous_vel(domain, lagrangian->un); 
+		g_free(pars);
+		lagrangian->first_call = FALSE;
     		return TRUE;
   	}
   	return FALSE;
@@ -696,8 +1174,22 @@ static void l_particles_init (LParticles * object)
 {
   	/* initialize object here */
 	object->particles = NULL;
+	object->forces = NULL;
         object->first_call = TRUE;
 
+	object->fcoeff.cl = 0.;
+  	object->fcoeff.cd = 0.;
+
+  	object->fcoeff.lift = 0;
+  	object->fcoeff.drag = 0;
+  	object->fcoeff.inertial = 0;
+	object->fcoeff.amf = 0;
+	object->fcoeff.buoy = 0;
+
+  	object->fcoeff.cdrag = NULL;
+	object->fcoeff.clift = NULL;
+	object->fcoeff.camf = NULL;
+	
         object->fcoeff.init = 0;
         object->fcoeff.fluidadv = 0;
 	object->fcoeff.RK4 = 0;

@@ -1,29 +1,27 @@
 1 0 GfsSimulation GfsBox GfsGEdge {} {
 
-  Time { end = 2 }
+  Time { end = 2 dtmax = 0.005  }
 
-  Refine 6
+  Refine 8
 
   #Solid (x*x + y*y - 0.0625*0.0625)
 
-  Init {} { 
+  Init { istep = 1 } { 
 
 	U = -sin(M_PI*y)*cos(M_PI*x) 
 	V = sin(M_PI*x)*cos(M_PI*y) }	
 
-
-  #SourceDiffusion {} U 0.00078125
-  #SourceDiffusion {} V 0.00078125
-
+  SourceViscosity 0.00078125
+  PhysicalParams { alpha = 1 }
 
   #OutputTime { istep = 1 } stderr
 
-  #OutputSimulation { istep = 1 } snapshot-%g.gfs 
+  #OutputSimulation { istep = 1 } stdout 
   #OutputSimulation { istep = 10 } snapshot-%g.vtk {format = VTK} 
 
 
  GModule lparticles
- LParticles { istep = 1 } Par Lden { } data { fluidadv = 1 } 
+ LParticles { istep = 1 } Par Lden { } data { lift = 1 amf = 1 drag = 1 inertial = 1} 
 
 }
 GfsBox {}

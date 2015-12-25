@@ -2,7 +2,7 @@
 #define _LPARTICLES_H_
 //#include "gfs.h"
 #include "event.h"
-
+#include "source.h"
 
 /* LParticles: Header */
 typedef struct _Particle Particle;
@@ -10,15 +10,19 @@ typedef struct _ForceCoefficients ForceCoefficients;
 typedef struct _LParticles         LParticles;
 typedef struct _LParticlesClass    LParticlesClass;
 
-
 /*Various forces acting on the particle due to its motion in the fluid*/
 typedef struct {
         Particle *p;
         GfsVariable **u, **un;
         ForceCoefficients *fcoeffs;
-        gdouble dt, dtn;
+        FttVector *force;
+	gdouble dt, dtn;
 	gdouble fluid_rho, viscosity;
+	LParticles *lagrangian;
 } ForceParams;
+
+typedef void (*force_pointer) (ForceParams *pars);
+
 
 struct _Particle {
 
@@ -32,6 +36,12 @@ struct _Particle {
 struct _ForceCoefficients {
 
         guint init, fluidadv, RK4;
+	gdouble cl, cd, cm;
+	guint lift, drag, inertial, amf, buoy;
+
+
+	GfsFunction *cdrag, *clift, *camf;
+
 
 };
 
@@ -45,12 +55,12 @@ struct _LParticles {
 	GString *name;
         GfsVariable *density;
         GfsVariable *reynolds;
+	GfsVariable **un;
 	GSList *forces;
         GSList *particles;
         guint maxid;
         gboolean first_call;
         ForceCoefficients fcoeff;
-	ForceParams pars;
 
 };
 
