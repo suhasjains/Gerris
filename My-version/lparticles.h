@@ -90,4 +90,31 @@ LParticles * l_particles_new    (LParticlesClass * klass);
 
 
 
+
+/*GfsSourceLagrangian : Header*/
+typedef struct _GfsSourceLagrangian         GfsSourceLagrangian;
+
+struct _GfsSourceLagrangian {
+  	
+	/*< private >*/
+  	GfsSourceVelocity parent;
+
+  	GString * name;
+  	/*< public >*/
+
+};     
+
+#define GFS_SOURCE_LAGRANGIAN(obj)            GTS_OBJECT_CAST (obj,\
+                                                 GfsSourceLagrangian,\
+                                                 gfs_source_lagrangian_class ())
+
+#define GFS_IS_SOURCE_LAGRANGIAN(obj)         (gts_object_is_from_class (obj,\
+                                                 gfs_source_lagrangian_class ()))
+
+GfsSourceGenericClass * gfs_source_lagrangian_class (void);
+
+
+
+
+
 #endif

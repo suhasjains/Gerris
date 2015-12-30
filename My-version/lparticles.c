@@ -62,11 +62,6 @@ static void compute_smooth_force(FttCell *cell, gpointer * data)
 #endif
    dist /= (pow(2.*M_PI,0.5)*sigma);
 
-//  GFS_VARIABLE(cell, f[0]->i) += p->phiforce.x*dist;
-//  GFS_VARIABLE(cell, f[1]->i) += p->phiforce.y*dist;
-//#if !FTT_2D
-//  GFS_VARIABLE(cell, f[2]->i) += p->phiforce.z*dist;
-//#endif
   GFS_VALUE(cell, f[0]) += p->phiforce.x*dist;
   GFS_VALUE(cell, f[1]) += p->phiforce.y*dist;
 #if !FTT_2D
@@ -77,9 +72,9 @@ static void compute_smooth_force(FttCell *cell, gpointer * data)
 
 static gboolean check_stencil(FttCell * cell, FttVector pos0, gdouble sigma, FttDirection *d)
 {
-  if(!cell) return FALSE;
+  	if(!cell) return FALSE;
 
-  gdouble size = ftt_cell_size(cell);
+  	gdouble size = ftt_cell_size(cell);
   FttVector pos1;
   ftt_cell_pos(cell, &pos1);
 
@@ -103,8 +98,6 @@ static gboolean check_stencil(FttCell * cell, FttVector pos0, gdouble sigma, Ftt
 }
 
 
-
-
 /*Gaussian Smoothed Two-way Coupling Force: Applied only on 3Sigma surroundings*/
 static void compute_coupling_force (Particle *p, GfsVariable **f)
 {
@@ -120,7 +113,7 @@ static void compute_coupling_force (Particle *p, GfsVariable **f)
   		radius = pow(3.0*(p->volume)/4.0/M_PI, 1./3.);
 	#endif
 
- 	gdouble sigma = MAX(2.*radius, size)/2.;
+  	gdouble sigma = MAX(2.*radius, size)/2.;
   	data[2] = &sigma;
 
   	FttCell *cell = p->cell, *neighbor1, *neighbor2;
@@ -129,25 +122,30 @@ static void compute_coupling_force (Particle *p, GfsVariable **f)
     		cell = ftt_cell_parent(cell);
   	}
 
+	/*   if(FTT_CELL_IS_ROOT(cell)) */
+	/*     return; */
 
   	g_assert(cell!=NULL);
 
-  	ftt_cell_traverse (cell, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1, (FttCellTraverseFunc) compute_smooth_force, data);
+  	ftt_cell_traverse (cell, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+                     (FttCellTraverseFunc) compute_smooth_force, data);
 
   	FttDirection d0, d1;
   	for(d0 = 0; d0 < FTT_DIMENSION; d0++){
     		neighbor1 = ftt_cell_neighbor(cell, d[d0]);
     		if(neighbor1)
-      			ftt_cell_traverse (neighbor1, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,(FttCellTraverseFunc) compute_smooth_force, data);
-    		else
-      			continue;
-  
-		/*   Do for neighbor if it exists else continue */
+      			ftt_cell_traverse (neighbor1, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+                         (FttCellTraverseFunc) compute_smooth_force, data);
+    	else
+      		continue;
+  	/*   Do for neighbor if it exists else continue */
     		for(d1 = d0 + 1; d1 < FTT_DIMENSION; d1++){
       			neighbor2 = ftt_cell_neighbor(neighbor1, d[d1]);
       			if(neighbor2){
-        			ftt_cell_traverse (neighbor2, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,(FttCellTraverseFunc) compute_smooth_force, data);
+        		ftt_cell_traverse (neighbor2, FTT_PRE_ORDER, FTT_TRAVERSE_LEAFS, -1,
+                           (FttCellTraverseFunc) compute_smooth_force, data);
       			}
+   		/*    Do for neighbor if it exists else continue */
     		}
   	}
 	
@@ -352,6 +350,11 @@ static void compute_drag_force (ForceParams *pars) {
         fcoeffs->cd = gfs_function_value (fcoeffs->cdrag, p->cell);
         force->x = fcoeffs->cd*relative_vel.x*fluid_rho;
         force->y = fcoeffs->cd*relative_vel.y*fluid_rho;
+//        GFS_VARIABLE(p->cell, pars->lagrangian->pdia->i) = 2.0*radius;
+
+        fcoeffs->cd = gfs_function_value (fcoeffs->cdrag, p->cell);
+        force->x = fcoeffs->cd*relative_vel.x*fluid_rho;
+        force->y = fcoeffs->cd*relative_vel.y*fluid_rho;
         force->z = fcoeffs->cd*relative_vel.z*fluid_rho;
 
         return;
@@ -411,18 +414,6 @@ static void compute_inertial_force(ForceParams * pars) {
         #endif
         }
 
-        ///GFS_VARIABLE has only one argument
-        ///Gradient is already normalized by the size of the cell.
-//      FttComponent c;
-//        for(c=0;c < FTT_DIMENSION;c++){
-//                force->x += fluid_rho*gfs_center_gradient(p->cell, c, u[0]->i)*
-//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
-//                force->y += fluid_rho*gfs_center_gradient(p->cell, c, u[1]->i)*
-//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
-//        #if !FTT_2D
-//                force->z += fluid_rho*gfs_center_gradient(p->cell, c, u[2]->i)*
-//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
-//        #endif
 
         /*Appending Convective derivative to local derivative to get the total force*/
         FttComponent c;
@@ -471,18 +462,6 @@ static void compute_amf_force(ForceParams * pars) {
         #endif
         }
 
-        ///GFS_VARIABLE takes only 1 argument
-        ///gfs_center_gradient is normalized by cell size
-//        FttComponent c;
-//        for(c = 0; c < FTT_DIMENSION; c++){
-//                force->x += fluid_rho*gfs_center_gradient(p->cell, c, u[0]->i)*
-//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
-//                force->y += fluid_rho*gfs_center_gradient(p->cell, c, u[1]->i)*
-//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
-//        #if !FTT_2D
-//                force->z += fluid_rho*gfs_center_gradient(p->cell, c, u[2]->i)*
-//                        GFS_VARIABLE(p->cell, u[c]->i)/size;
-//        #endif
 
 	/*Appending Convective derivative to local derivative to get the total force*/
         FttComponent c;
@@ -495,10 +474,6 @@ static void compute_amf_force(ForceParams * pars) {
 
    	}
 
-        ///Particle velocity subtraction is missing - done later while calculating the particle acceleration 
-//      force->x -= fluid_rho*p->acc.x;
-//      force->y -= fluid_rho*p->acc.y;
-//      force->z -= fluid_rho*p->acc.z; 
 
 	//coefficient
 	fcoeffs->cm = 0.5;
@@ -539,13 +514,12 @@ static void compute_buoyant_force(ForceParams * pars) {
         ///p->density-fluid_rho is not defined
         force->x = (p->density - fluid_rho)*g[0];
         force->y = (p->density - fluid_rho)*g[1];
-        #if !FTT_2D
-        force->z = (p->density - fluid_rho)*g[2];
-        #endif
-
+	#if !FTT_2D
+  		force->z = (p->density-fluid_rho)*g[2];
+	#endif
 }
 
-//Forces on fluid due to particles
+
 static void particles_force(ForceParams * pars)
 {
   Particle *p = pars->p;
@@ -556,6 +530,12 @@ static void particles_force(ForceParams * pars)
   if(p->cell==NULL)
     return;
 
+
+/*   gdouble radius = pow(p->volume/M_PI,1./2.); */
+/* #if FTT_3D */
+/*   radius = pow(3.0*(p->volume)/4.0/M_PI, 1./3.); */
+/* #endif */
+/*   gdouble p3dvolume = 4.0/3.0*M_PI*radius*radius*radius; */
   gdouble p3dvolume = p->volume;
 
   p->phiforce.x = -p->acc.x*(p->density)* p3dvolume;
@@ -582,8 +562,6 @@ static void particles_force(ForceParams * pars)
   p->phiforce.z /=(pars->fluid_rho);
 
 }
-
-
 
 
 
@@ -1379,7 +1357,7 @@ static void l_particles_class_init (LParticlesClass * klass)
   	/* define new methods and overload inherited methods here */
   	GFS_EVENT_CLASS (klass)->event = l_particles_event;
   	GTS_OBJECT_CLASS (klass)->read = l_particles_read;
-  	GTS_OBJECT_CLASS (klass)->write = l_particles_write;
+  	//GTS_OBJECT_CLASS (klass)->write = l_particles_write;
 	GTS_OBJECT_CLASS (klass)->destroy = l_particles_destroy;
 }
 
@@ -1435,21 +1413,192 @@ LParticlesClass * l_particles_class (void)
 
 LParticles * l_particles_new (LParticlesClass * klass)
 {
-  LParticles * object;
+  	LParticles * object;
 
-  object = L_PARTICLES (gts_object_new (GTS_OBJECT_CLASS (klass)));
+  	object = L_PARTICLES (gts_object_new (GTS_OBJECT_CLASS (klass)));
 
-  return object;
+  	return object;
 }
 
-/* Initialize the lagrangian module*/
-const gchar gfs_module_name[] = "lparticles";
-const gchar * g_module_check_init (void);
 
-const gchar * g_module_check_init (void) {
 
-        l_particles_class ();
+/*GfsSourceGfsLagrangianParticles: Object*/
 
-        return NULL;
+static void source_lagrangian_destroy (GtsObject * o)
+{
+
+  	g_string_free(GFS_SOURCE_LAGRANGIAN(o)->name,TRUE);
+
+  	(* GTS_OBJECT_CLASS (gfs_source_lagrangian_class ())->parent_class->destroy) (o);
+
 }
+
+static void source_lagrangian_read (GtsObject ** o, GtsFile * fp)
+{
+
+	//parent class read method
+  	if (GTS_OBJECT_CLASS (gfs_source_diffusion_explicit_class ())->parent_class->read) (* GTS_OBJECT_CLASS (gfs_source_lagrangian_class ())->parent_class->read) (o, fp);
+
+  	if (fp->type == GTS_ERROR)
+    		return;
+
+	//object read method
+  	GfsSourceLagrangian * source = GFS_SOURCE_LAGRANGIAN(*o);
+
+  	if (fp->type == GTS_STRING) {
+    		source->name = g_string_new(fp->token->str);
+    		gts_file_next_token (fp);
+  	}
+  	else
+    	gts_file_error (fp, "expecting a string");
+
+}
+
+
+
+static void source_lagrangian_write (GtsObject * o, FILE * fp)
+{
+  	(* GTS_OBJECT_CLASS (gfs_source_lagrangian_class ())->parent_class->write) (o, fp);
+
+  	GfsSourceLagrangian * source = GFS_SOURCE_LAGRANGIAN(o);
+
+  	fprintf(fp," %s\n",source->name->str);
+}
+
+/* Add source term in the Momentum equations*/
+static gdouble compute_phi_force_mac_value(GfsSourceGeneric * s,
+                                           FttCell * cell,
+                                           GfsVariable * v)
+{
+
+  	GfsDomain *d = GFS_DOMAIN(gfs_object_simulation(s));
+  	GfsVariable *force;
+  	gchar * name;
+  	GfsSourceLagrangian *sv = GFS_SOURCE_LAGRANGIAN(s);
+
+  	FttCellFace f;
+  	f.cell = cell;
+
+  	FttCellNeighbors n;
+  	ftt_cell_neighbors (cell, &n);
+
+  	switch(v->component){
+  		case FTT_X:
+    			name = g_strconcat(sv->name->str, "x", NULL);
+    			force = gfs_variable_from_name(d->variables, name);
+    			f.d = FTT_RIGHT;
+    			f.neighbor = n.c[f.d];
+    		break;
+  		case FTT_Y:
+    			name = g_strconcat(sv->name->str, "y", NULL);
+    			force = gfs_variable_from_name(d->variables, name);
+    			f.d = FTT_TOP;
+    			f.neighbor = n.c[f.d];
+    		break;
+		#if !FTT_2D
+  			case FTT_Z:
+    				name = g_strconcat(sv->name->str, "z", NULL);
+    				force = gfs_variable_from_name(d->variables, name);
+    				f.d = FTT_FRONT;
+    				f.neighbor = n.c[f.d];
+    			break;
+		#endif
+  		default: g_assert_not_reached ();
+  	}
+
+  	g_free(name);
+  	if(force!=NULL)
+    		return  gfs_face_interpolated_value(&f, force->i);
+  	else
+    	g_assert_not_reached ();
+
+  	return 0.;
+
+}
+
+
+static gdouble compute_phi_force_centered_value(GfsSourceGeneric * s,
+                                                FttCell * cell,
+                                                GfsVariable * v)
+{
+
+  	GfsDomain *d = GFS_DOMAIN(gfs_object_simulation(s));
+  	GfsVariable *force;
+  	gchar * name;
+  	GfsSourceLagrangian *sv = GFS_SOURCE_LAGRANGIAN(s);
+
+  	switch(v->component){
+  	case FTT_X:
+    		name = g_strconcat(sv->name->str, "x", NULL);
+    		force = gfs_variable_from_name(d->variables, name);
+    	break;
+  	case FTT_Y:
+    		name = g_strconcat(sv->name->str, "y", NULL);
+    		force = gfs_variable_from_name(d->variables, name);
+    	break;
+	#if !FTT_2D
+  		case FTT_Z:
+    			name = g_strconcat(sv->name->str, "z", NULL);
+    			force = gfs_variable_from_name(d->variables, name);
+    		break;
+	#endif
+  	default: g_assert_not_reached ();
+  	}
+
+  	g_free(name);
+  	if(force!=NULL){
+    		return GFS_VALUE(cell,force);}
+  	else
+    	g_assert_not_reached ();
+
+}
+
+
+static void gfs_source_lagrangian_class_init (GfsSourceGenericClass * klass)
+{
+
+  	GTS_OBJECT_CLASS (klass)->destroy = source_lagrangian_destroy;
+  	GTS_OBJECT_CLASS (klass)->read = source_lagrangian_read;
+  	GTS_OBJECT_CLASS (klass)->write = source_lagrangian_write;
+
+}
+
+static void gfs_source_lagrangian_init (GfsSourceGeneric * s)
+{
+  	s->mac_value= compute_phi_force_mac_value;
+  	s->centered_value = compute_phi_force_centered_value;
+}
+
+GfsSourceGenericClass * gfs_source_lagrangian_class (void)
+{
+  	static GfsSourceGenericClass * klass = NULL;
+
+  	if (klass == NULL) {
+    		GtsObjectClassInfo gfs_source_lagrangian_info = {
+      		"GfsSourceLagrangian",
+      		sizeof (GfsSourceLagrangian),
+      		sizeof (GfsSourceGenericClass),
+      		(GtsObjectClassInitFunc) gfs_source_lagrangian_class_init,
+      		(GtsObjectInitFunc) gfs_source_lagrangian_init,
+      		(GtsArgSetFunc) NULL,
+      		(GtsArgGetFunc) NULL
+    	};
+    	klass = gts_object_class_new (GTS_OBJECT_CLASS (gfs_source_velocity_class ()),
+                                  &gfs_source_lagrangian_info);
+  	}
+
+  	return klass;
+}
+
+
+
+//\* Initialize modules *\/ */
+const gchar * g_module_check_init (void); 
+
+const gchar * g_module_check_init (void) 
+{ 
+  	l_particles_class (); 
+  	gfs_source_lagrangian_class (); 
+  	return NULL; 
+}  
 

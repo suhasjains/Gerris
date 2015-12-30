@@ -1,0 +1,49 @@
+1 0 GfsSimulation GfsBox GfsGEdge {} {
+
+  Time { end = 10 dtmax = 0.005  }
+
+  Refine 6
+
+  #Solid (x*x + y*y - 0.0625*0.0625)
+
+  Init { istep = 1 } {
+
+
+	U = {
+		double r = sqrt(pow(x,2) + pow(y,2));
+		double vtheta1 = r;
+		double vtheta2 = 0.01/r; 
+		double u;
+		if(r<=0.25)		u = -vtheta1*y/r;
+		else 			u = -vtheta2*y/r;
+		return u;
+	}
+
+	V = {
+		double r = sqrt(pow(x,2) + pow(y,2));
+		double vtheta1 = r;
+		double vtheta2 = 0.01/r;
+		double v; 
+		if(r<=0.25)		v = vtheta1*x/r;
+		else			v = vtheta2*x/r;
+		return v;
+	}
+
+	}
+
+
+  SourceViscosity 0.008556
+  PhysicalParams { alpha = 1 }
+  Source {} V -10
+  #OutputTime { istep = 1 } stderr
+
+  #OutputSimulation { istep = 1 } snapshot-%g.gfs 
+  #OutputSimulation { istep = 1 } stdout 
+  #OutputSimulation { istep = 10 } snapshot-%g.vtk {format = VTK} 
+
+
+ GModule lparticles
+ LParticles { istep = 1 } Par Lden { } data { drag = 1 inertial = 1 lift = 1 amf = 1 buoy = 1} 
+
+}
+GfsBox {}
