@@ -1,6 +1,6 @@
 8 7 GfsSimulation GfsBox GfsGEdge {} {
 
-  Time { end = 1 }
+  Time { end = 10 }
 
   Refine 6
 
@@ -12,25 +12,21 @@
   SourceDiffusion {} V 0.00078125
 
 
-  OutputTime { istep = 1 } stderr
+  #OutputTime { istep = 1 } stderr
 
+  OutputSimulation { istep = 1 } stdout
   #OutputSimulation { istep = 1 } snapshot-%g.gfs 
-  OutputSimulation { istep = 1 } snapshot-%g.vtk {format = VTK} 
+  #OutputSimulation { istep = 1 } snapshot-%g.vtk {format = VTK} 
 
- # GModule lagrangian
- # LagrangianParticles { istep = 1 } Par Lden { } data { }
 
- # GModule particulates
- # ParticleList *LP { istep = 1 } GfsParticulate {1 0 0 0 0 0 1 1 1 1 1 1 }   
-
- GModule lparticles
- LParticles { istep = 1 } Par Lden { } data { fluidadv = 1 RK4 = 1 } 
+  GModule lparticles
+  LParticles { istep = 1 } Par Lden { } data { drag = 1 } 
+  SourceLagrangian Par
 
 }
 GfsBox {
   left = Boundary {
     BcDirichlet U 1
-#    BcDirichlet T { return y < 0. ? 1. : 0.; }
   }
 }
 GfsBox {}

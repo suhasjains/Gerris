@@ -113,6 +113,7 @@ liblparticles2D_la_SOURCES = lparticles.c
 liblparticles2D_la_CFLAGS = $(AM_CFLAGS) -DFTT_2D=1
 liblparticles2D_la_LIBADD = $(GFS2D_LIBS)
 
+
 libwavewatch2D_la_SOURCES = wavewatch.c
 libwavewatch2D_la_LIBADD = $(GFS2D_LIBS) -Lwavewatch -lwavewatch -L/usr/lib/gcc/i486-linux-gnu/4.2 -lgfortran
 libwavewatch2D_la_CFLAGS = $(AM_CFLAGS) -DFTT_2D=1 \
